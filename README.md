@@ -16,6 +16,7 @@ mvn install:install-file \
    -Dversion=<version> \
    -Dpackaging=<packaging> \
    -DgeneratePom=true
+'''
 
 Learn and ask questions in [Discussions for use and development of NeqSim](https://github.com/equinor/neqsim/discussions).
 
