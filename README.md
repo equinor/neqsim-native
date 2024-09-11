@@ -27,6 +27,8 @@ mvn -Pnative package
 To test the executable:
 run neqsim.exe in the target directory.
 
+The shared libraries and header files can be integrated into third party C/C++ programs.
+
 ## Example
 In the folloing example we have established a TEG-process.
 
