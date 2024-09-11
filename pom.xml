@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>neqsim</groupId>
+    <artifactId>neqsim</artifactId>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+    <dependency>
+    <groupId>org.apache.logging.log4j</groupId>
+    <artifactId>log4j-core</artifactId>
+    <version>2.24.0</version>
+</dependency>
+
+ <dependency>
+    <groupId>neqsim</groupId>
+    <artifactId>neqsim</artifactId>
+    <version>2.5.33</version>
+</dependency>
+   
+    <dependency>
+    <groupId>org.ejml</groupId>
+    <artifactId>ejml-core</artifactId>
+    <version>0.43.1</version>
+</dependency>
+
+<!-- https://mvnrepository.com/artifact/org.graalvm.nativeimage/native-image-maven-plugin -->
+        <dependency>
+            <groupId>org.graalvm.nativeimage</groupId>
+            <artifactId>svm</artifactId>
+            <version>21.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+    </dependencies>
+    
+
+  <profiles>
+    <profile>
+      <id>native</id>
+      <build>
+        <plugins>
+         <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-compiler-plugin</artifactId>
+             <version>3.12.1</version>
+             <configuration>
+                 <fork>true</fork>
+             </configuration>
+         </plugin>
+         <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-jar-plugin</artifactId>
+             <version>3.3.0</version>
+             <configuration>
+                 <archive>
+                     <manifest>
+                         <mainClass>neqsim.process.TestProcess</mainClass>
+                         <addClasspath>true</addClasspath>
+                     </manifest>
+                 </archive>
+             </configuration>
+         </plugin>
+          <plugin>
+            <groupId>org.graalvm.buildtools</groupId>
+            <artifactId>native-maven-plugin</artifactId>
+            <version>0.10.3</version>
+            <extensions>true</extensions>
+            <executions>
+              <execution>
+                <id>build-native</id>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                 <configuration>
+                 
+                 <!-- <sharedLibrary>true</sharedLibrary>-->
+                        <mainClass>neqsim.process.TestProcess</mainClass> <!-- Replace with your actual main class -->
+                    </configuration>
+                <phase>package</phase>
+              </execution>
+              <execution>
+                <id>test-native</id>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <phase>test</phase>
+              </execution>
+            </executions>
+            <configuration>
+              <!-- ... -->
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>
