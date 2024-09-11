@@ -25,8 +25,7 @@ At the moment the executable is created from the class [TestProcess](https://git
 To test the executable:
 run neqsim.exe in the target directory.
 
-To create a shared library - activate this in the pom file.
-C:\Users\esol
+To create a shared library - activate this in the pom file. See [documentation](https://www.graalvm.org/latest/reference-manual/native-image/guides/build-native-shared-library/).
 The shared libraries and header files can be integrated into third party C/C++ programs.
 
 ## Example
