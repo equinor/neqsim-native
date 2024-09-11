@@ -1,6 +1,6 @@
 ![NeqSim Logo](https://github.com/equinor/neqsim/blob/master/docs/wiki/neqsimlogocircleflatsmall.png)
 # NeqSim Native
-This project compiles NeqSim into a native executable or shared library using GraalVM that can be used directly or integrated into eg. C/C++ programs.
+This project compiles NeqSim simulation models into a native executable or shared library using GraalVM that can be used directly or integrated into eg. C/C++ programs.
 
 ## Getting Started
 1. Install the [GraalVM JDK](https://www.graalvm.org/)
