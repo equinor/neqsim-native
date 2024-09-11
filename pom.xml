@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>neqsim</groupId>
+    <groupId>com.equinor.neqsim</groupId>
     <artifactId>neqsim</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
@@ -23,7 +23,7 @@
 </dependency>
 
  <dependency>
-    <groupId>neqsim</groupId>
+    <groupId>com.equinor.neqsim</groupId>
     <artifactId>neqsim</artifactId>
     <version>2.5.33</version>
 </dependency>
