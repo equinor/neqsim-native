@@ -7,7 +7,7 @@ This project compiles NeqSim simulation models into a native executable or share
 2. Review the [GraalVM Getting Started Guide](https://www.graalvm.org/latest/docs/getting-started/)
 3. Review [native compilation documentation](https://www.graalvm.org/latest/reference-manual/native-image/) with GraalVM
 
-The project is built into native code (e.g., shared libraries or executables) using the Maven build system. All NeqSim dependencies are specified in the `pom.xml` file. Since NeqSim is not available in a public Maven repository, you'll need to manually add the NeqSim JAR to your local Maven repository. Start by downloading the latest version of the NeqSim library, then run the following command to add it to your local Maven repo (eg. for neqsim version 2.5.32 located in the C:\Users\esol\Downloads\n directory):
+The project is built into native code (e.g., shared libraries or executables) using the Maven build system. All NeqSim dependencies are specified in the `pom.xml` file. Since NeqSim is not available in a public Maven repository, you'll need to manually add the NeqSim JAR to your local Maven repository. Start by downloading the latest version of the NeqSim library, then run the following command to add it to your local Maven repo:
 
 ```bash
 mvn org.apache.maven.plugins:maven-install-plugin:install-file -Dfile="C:\temp\neqsim-2.5.32.jar
