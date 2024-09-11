@@ -23,8 +23,9 @@ Learn and ask questions in [Discussions for use and development of NeqSim](https
 
 ## Commands
 To compile the project to native code:
+```
 mvn -Pnative package
-
+```
 To test the executable:
 run neqsim.exe in the target directory.
 
