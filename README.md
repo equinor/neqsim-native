@@ -1,12 +1,14 @@
 ![NeqSim Logo](https://github.com/equinor/neqsim/blob/master/docs/wiki/neqsimlogocircleflatsmall.png)
-# NeqSim-native
+# NeqSim Native
 This project compiles NeqSim into a native shared library using GraalVM.
 
-## Getting started 
-Install the [GraalVM JDK](https://www.graalvm.org/) and read the [getting started documentation](https://www.graalvm.org/latest/docs/getting-started/).
+## Getting Started
+1. Install the [GraalVM JDK](https://www.graalvm.org/).
+2. Review the [GraalVM Getting Started Guide](https://www.graalvm.org/latest/docs/getting-started/).
 
-The project is built into native code (eg. shared library/executalble) using the Maven build system (https://maven.apache.org/). All NeqSim build dependencies are given in the pom.xml file. As nesim is not available in a public maven repo, the neqsim librar (jar) has to be added to the local maven repo. You start by donloading the most recent neqsim library, and the add it to the local maven repo using the command:
+The project is built into native code (e.g., shared libraries or executables) using the Maven build system. All NeqSim dependencies are specified in the `pom.xml` file. Since NeqSim is not available in a public Maven repository, you'll need to manually add the NeqSim JAR to your local Maven repository. Start by downloading the latest version of the NeqSim library, then run the following command to add it to your local Maven repo:
 
+```bash
 mvn install:install-file \
    -Dfile=<path-to-file> \
    -DgroupId=<group-id> \
