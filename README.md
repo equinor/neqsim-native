@@ -26,13 +26,17 @@ To compile the project to native code:
 ```
 mvn -Pnative package
 ```
+At the moment the executable is created from the class [TestProcess](https://github.com/equinor/neqsim-native/blob/main/src/main/java/neqsim/process/TestProcess.java). 
+
 To test the executable:
 run neqsim.exe in the target directory.
+
+To create a shared library - activate this in the pom file.
 
 The shared libraries and header files can be integrated into third party C/C++ programs.
 
 ## Example
-In the folloing example we have established a TEG-process.
+In the following example we have established a TEG-process.
 
 https://github.com/equinor/neqsim-native/blob/main/src/main/java/neqsim/process/TestProcess.java
 
