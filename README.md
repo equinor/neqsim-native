@@ -5,7 +5,7 @@ NeqSim is a library for calculation of fluid behavior, phase equilibrium and pro
 ## Getting started 
 Install the [GraalVM JDK](https://www.graalvm.org/) and read the [getting started documentation](https://www.graalvm.org/latest/docs/getting-started/).
 
-##Commands
+## Commands
 To compile the project to native code:
 mvn -Pnative package
 
