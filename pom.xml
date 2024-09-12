@@ -76,7 +76,7 @@
                    <agent>
                       <enabled>true</enabled>
                     </agent>
-                 <sharedLibrary>true</sharedLibrary>
+                    <sharedLibrary>true</sharedLibrary>
                      <mainClass>neqsim.process.TestProcess</mainClass>
                     </configuration>
                 <phase>package</phase>
