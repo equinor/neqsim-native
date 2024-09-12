@@ -37,3 +37,5 @@ In the following example we have established a TEG-process.
 
 https://github.com/equinor/neqsim-native/blob/main/src/main/java/neqsim/process/TestProcess.java
 
+This code can be used from a c++ program as illustrated in the [example code](https://github.com/equinor/neqsim-native/blob/main/example/main.cpp).
+
