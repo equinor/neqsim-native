@@ -5,7 +5,7 @@ This project compiles NeqSim simulation models into a native executable or share
 Learn and ask questions in [Discussions for use and development of NeqSim](https://github.com/equinor/neqsim/discussions).
 
 ## Getting Started
-1. Install the [GraalVM JDK](https://www.graalvm.org/). On Linux use: sdk install java 22.3.r17-grl and sdk use java 22.3.r17-grl
+1. Install the [GraalVM JDK](https://www.graalvm.org/). On Linux use: sdk install java 22.3.r17-grl
 2. Review the [GraalVM Getting Started Guide](https://www.graalvm.org/latest/docs/getting-started/)
 3. Review [native compilation documentation](https://www.graalvm.org/latest/reference-manual/native-image/) with GraalVM
 
