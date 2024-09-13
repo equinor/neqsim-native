@@ -13,7 +13,7 @@ curl -L -o neqsim-2.5.34.jar https://github.com/equinor/neqsim/releases/download
 ```
 then run the following command to add it to your local Maven repo:
 ```bash
-mvnw org.apache.maven.plugins:maven-install-plugin:install-file -Dfile="neqsim-2.5.34.jar"
+./mvnw org.apache.maven.plugins:maven-install-plugin:install-file -Dfile="neqsim-2.5.34.jar"
 ```
 
 Learn and ask questions in [Discussions for use and development of NeqSim](https://github.com/equinor/neqsim/discussions).
@@ -22,7 +22,7 @@ Learn and ask questions in [Discussions for use and development of NeqSim](https
 To compile the project to native code (on windows use mvnw.cmd):
 
 ```
-mvnw -Pnative package
+./mvnw -Pnative package
 ```
 
 At the moment the executable is created from the class [TestProcess](https://github.com/equinor/neqsim-native/blob/main/src/main/java/neqsim/process/TestProcess.java). 
