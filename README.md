@@ -25,7 +25,7 @@ To compile the project to native code (on windows use mvnw.cmd):
 ./mvnw -Pnative package
 ```
 
-To create a shared library - activate this in the pom file by specifying the configuration (activated by default in current pom).
+A shared library is created by activating this in the pom file:
 ```
 <sharedLibrary>true</sharedLibrary>
 ```
