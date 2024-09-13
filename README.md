@@ -20,6 +20,13 @@ To compile the project to native code:
 ```
 mvn -Pnative package
 ```
+
+or
+
+```
+./mvnw -Pnative package
+```
+
 At the moment the executable is created from the class [TestProcess](https://github.com/equinor/neqsim-native/blob/main/src/main/java/neqsim/process/TestProcess.java). 
 
 To test the executable:
