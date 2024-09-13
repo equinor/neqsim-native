@@ -11,7 +11,6 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear
@@ -23,4 +22,5 @@
 hs_err_pid*
 replay_pid*
 
+# do not include files in target directory
 target*
