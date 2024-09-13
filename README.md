@@ -3,7 +3,7 @@
 This project compiles NeqSim simulation models into a native executable or shared library using GraalVM that can be used directly or integrated into eg. C/C++ programs. An example of use is implementation of NeqSim models in process control systems.
 
 ## Getting Started
-1. Install the [GraalVM JDK](https://www.graalvm.org/)
+1. Install the [GraalVM JDK](https://www.graalvm.org/). On Linux use: sdk install java 22.3.r17-grl and sdk use java 22.3.r17-grl
 2. Review the [GraalVM Getting Started Guide](https://www.graalvm.org/latest/docs/getting-started/)
 3. Review [native compilation documentation](https://www.graalvm.org/latest/reference-manual/native-image/) with GraalVM
 
