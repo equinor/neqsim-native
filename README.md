@@ -10,18 +10,13 @@ This project compiles NeqSim simulation models into a native executable or share
 The project is built into native code (e.g., shared libraries or executables) using the Maven build system. All NeqSim dependencies are specified in the `pom.xml` file. Since NeqSim is not available in a public Maven repository, you'll need to manually add the NeqSim JAR to your local Maven repository. Start by downloading the [latest release](https://github.com/equinor/neqsim/releases) of the NeqSim jar (neqsim-X.X.X-Java21.jar), then run the following command to add it to your local Maven repo:
 
 ```bash
-mvn org.apache.maven.plugins:maven-install-plugin:install-file -Dfile="C:\temp\neqsim-2.5.34-Java21.jar
+./mvnw org.apache.maven.plugins:maven-install-plugin:install-file -Dfile="neqsim-2.5.34-Java21.jar"
 ```
 
 Learn and ask questions in [Discussions for use and development of NeqSim](https://github.com/equinor/neqsim/discussions).
 
 ## Commands
 To compile the project to native code:
-```
-mvn -Pnative package
-```
-
-or
 
 ```
 ./mvnw -Pnative package
