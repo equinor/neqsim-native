@@ -16,7 +16,7 @@ mvnw org.apache.maven.plugins:maven-install-plugin:install-file -Dfile="neqsim-2
 Learn and ask questions in [Discussions for use and development of NeqSim](https://github.com/equinor/neqsim/discussions).
 
 ## Commands
-To compile the project to native code:
+To compile the project to native code (on windows use mvnw.cmd):
 
 ```
 mvnw -Pnative package
