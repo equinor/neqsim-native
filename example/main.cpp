@@ -23,7 +23,7 @@ int main() {
         return create_result;
     }
     float sum_result = makeup(thread, 5.0, 25.0);
-    std::cout << "Result of function_name(5, 10): " << sum_result << std::endl;
+    std::cout << "Result of makeup function call: " << sum_result << std::endl;
 
 
     cout << "Thank you. Exiting." << endl;
