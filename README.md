@@ -38,7 +38,7 @@ See [documentation](https://www.graalvm.org/latest/reference-manual/native-image
 The shared libraries and header files can be integrated into third party C/C++ programs.
 
 ## Example
-In the following example we have established a TEG dehdyration process.
+In the following example we have established a TEG dehydration process.
 
 https://github.com/equinor/neqsim-native/blob/main/src/main/java/neqsim/process/TestProcess.java
 
