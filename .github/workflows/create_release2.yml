@@ -31,7 +31,7 @@ jobs:
         run: |
           cd java_graal
           mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file ^
-            -Dfile="neqsim-3.0.18.jar" ^
+            -Dfile="neqsim-3.0.20.jar" ^
             -DgroupId="com.equinor.neqsim" ^
             -DartifactId="neqsim" ^
             -Dversion="3.0.20" ^
