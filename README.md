@@ -1,4 +1,4 @@
-![Build maven](https://github.com/equinor/neqsim-septic/actions/workflows/verify_build.yml/badge.svg?branch=master)
+![Build maven](https://github.com/equinor/neqsim-native/actions/workflows/verify_build.yml/badge.svg?branch=master)
 [![Known Vulnerabilities](https://snyk.io/test/github/equinor/neqsim/badge.svg)](https://snyk.io/test/github/equinor/neqsim)
 
 # Neqsim-Native
