@@ -1,0 +1,35 @@
+name: Run Java Tests
+
+on:
+  workflow_dispatch:  
+  push:
+    branches: # Only run for changes in master branch and any releases branch
+      - master
+      - 'releases/**'
+  pull_request:
+    branches: 
+      - master
+
+jobs:
+  run_test:
+    runs-on: windows-latest
+    env:
+      GITHUB_USERNAME: ${{ secrets.USERNAME }}
+      GITHUB_TOKEN: ${{ secrets.TOKEN }}
+    
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+            
+      - name: Assert tests with Java 21 on Windows
+        shell: cmd
+        run: |
+          cd java_graal
+          ./mvnw -B test --file pom.xml -ntp

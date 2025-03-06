@@ -1,0 +1,7 @@
+[
+  {
+    "name": "neqsim.thermo.system.SystemPrEos1978",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  }
+]

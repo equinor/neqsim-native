@@ -1,0 +1,13 @@
+{
+  "resources": [
+    {
+      "glob": "META-INF/services/java.lang.System$LoggerFinder"
+    },
+    {
+      "module": "java.base",
+      "glob": "sun/launcher/resources/launcher_en.properties"
+    }
+  ],
+  
+  "bundles": []
+}
