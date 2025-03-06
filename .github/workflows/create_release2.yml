@@ -25,8 +25,8 @@ jobs:
         run: |
           set PATH=%JAVA_HOME%\bin;%PATH%
           native-image.cmd --version
-      # Installer neqsim-3.0.18.jar lokalt (om nødvendig). Juster stien om filen ligger et annet sted.
-      - name: Install neqsim-3.0.18.jar locally
+      # Installer neqsim-3.0.20.jar lokalt (om nødvendig). Juster stien om filen ligger et annet sted.
+      - name: Install neqsim-3.0.20.jar locally
         shell: cmd
         run: |
           cd java_graal
@@ -34,7 +34,7 @@ jobs:
             -Dfile="neqsim-3.0.18.jar" ^
             -DgroupId="com.equinor.neqsim" ^
             -DartifactId="neqsim" ^
-            -Dversion="3.0.18" ^
+            -Dversion="3.0.20" ^
             -Dpackaging="jar"
       - name: Build with Maven (native)
         shell: cmd
