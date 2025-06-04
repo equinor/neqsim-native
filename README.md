@@ -16,7 +16,6 @@ See: example folder. Needed files:
 
 #  Documentation
 Method documentation and input and output parameters are described in the [README](https://github.com/equinor/neqsim-native/blob/main/doc/README.md) file.
-The documentation is added manually in the README file by transfering the documentation from the java process model as found in under the [process folder](https://github.com/equinor/neqsim-native/tree/main/java_graal/src/main/java/neqsim).
 
 # Unit testing
 Unit testing is done as part of the build process.
