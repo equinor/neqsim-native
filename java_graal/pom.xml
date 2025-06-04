@@ -2,79 +2,46 @@
 <project 
     xmlns="http://maven.apache.org/POM/4.0.0" 
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-                        https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <!-- Basic Project Coordinates -->
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.equinor.neqsim</groupId>
     <artifactId>neqsim</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
 
-    <!-- Project Properties -->
     <properties>
-        <!-- Java Version -->
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-
-        <!-- Encoding -->
+        <maven.compiler.source>24</maven.compiler.source>
+        <maven.compiler.target>24</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <!-- GraalVM Build Tools Plugin Version -->
-        <graalvm.buildtools.version>0.10.3</graalvm.buildtools.version>
-
-        <!-- GraalVM Native Image SVM Version (optional if needed) -->
-        <graalvm.svm.version>23.1.6</graalvm.svm.version>
+        <graalvm.svm.version>24.0.1</graalvm.svm.version>
+        <graalvm.buildtools.version>0.10.6</graalvm.buildtools.version>
     </properties>
 
-    <repositories>
-    <repository>
-        <id>github</id>
-        <name>GitHub Equinor Apache Maven Packages</name>
-        <url>https://maven.pkg.github.com/Equinor/neqsim</url>
-    </repository>
-    </repositories>
-
-    <!-- Dependencies -->
     <dependencies>
-        <!-- NeqSim: Must be installed into local Maven repo or a custom repo -->
         <dependency>
             <groupId>com.equinor.neqsim</groupId>
             <artifactId>neqsim</artifactId>
-            <version>3.0.20</version>
+            <version>3.0.26</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.11.3</version>
+            <version>5.12.2</version>
             <scope>test</scope>
-        </dependency>
-        <!-- If you need the GraalVM SVM library explicitly -->
-        <!-- Provided scope means it's not included in the final jar -->
-        <dependency>
-            <groupId>org.graalvm.nativeimage</groupId>
-            <artifactId>svm</artifactId>
-            <version>${graalvm.svm.version}</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 
-    <!-- Build Configuration -->
     <build>
         <plugins>
-            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <!-- Ties into <maven.compiler.source> and <maven.compiler.target> -->
                     <fork>true</fork>
                 </configuration>
             </plugin>
-
-            <!-- Maven Jar Plugin: sets the main class for the jar manifest -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -82,45 +49,58 @@
                 <configuration>
                     <archive>
                         <manifest>
+                            <mainClass>neqsim.process.raia.RaiaProcess</mainClass>
                             <addClasspath>true</addClasspath>
                         </manifest>
                     </archive>
                 </configuration>
             </plugin>
-
-            <!-- Maven Resources Plugin: to filter resources and include version number -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <id>copy-resources</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>resources</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <resource>
-                                    <directory>src/main/resources</directory>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
-
-    <!-- Profiles for conditional builds -->
     <profiles>
         <profile>
-            <id>native</id>
+            <id>native-linux</id>
+            <activation><os><name>Linux</name></os></activation>
             <build>
                 <plugins>
-                    <!-- GraalVM Native Image Plugin -->
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${graalvm.buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <!-- Shared library -->
+                            <execution>
+                                <id>build-shared-lib-linux</id>
+                                <goals><goal>compile-no-fork</goal></goals>
+                                <configuration>
+                                    <excludeTestClasses>true</excludeTestClasses>
+                                    <agent>
+                                        <enabled>false</enabled>
+                                    </agent>
+                                    <mainClass>neqsim.process.raia.RaiaProcess</mainClass>
+                                    <sharedLibrary>true</sharedLibrary>
+                                    <imageName>neqsim</imageName>
+                                    <debugSymbols>true</debugSymbols>
+                                    <debug>true</debug>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-g</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                    </buildArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>native-macos</id>
+            <activation><os><name>Mac OS X</name></os></activation>
+            <build>
+                <plugins>
                     <plugin>
                         <groupId>org.graalvm.buildtools</groupId>
                         <artifactId>native-maven-plugin</artifactId>
@@ -128,22 +108,60 @@
                         <extensions>true</extensions>
                         <executions>
                             <execution>
-                                <id>build-native</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <!-- compile-no-fork: runs native image in the same process -->
-                                    <goal>compile-no-fork</goal>
-                                </goals>
+                                <id>build-shared-lib-macos</id>
+                                <goals><goal>compile-no-fork</goal></goals>
                                 <configuration>
-                                    <!-- Agent usage (if you want to generate config at runtime) -->
+                                    <excludeTestClasses>true</excludeTestClasses>
                                     <agent>
-                                        <enabled>true</enabled>
+                                        <enabled>false</enabled>
                                     </agent>
-                                    <!-- Build a shared library instead of an executable -->
+                                    <mainClass>neqsim.process.raia.RaiaProcess</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
-                                    <!-- The main class to be compiled into a native image -->
-                                    <!-- Additional build args for optimization or reflection config -->
-                                  
+                                    <imageName>neqsim</imageName>
+                                    <debugSymbols>true</debugSymbols>
+                                    <debug>true</debug>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-g</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                    </buildArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>native-windows</id>
+            <activation><os><name>Windows</name></os></activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${graalvm.buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-shared-lib-windows</id>
+                                <goals><goal>compile-no-fork</goal></goals>
+                                <configuration>
+                                    <excludeTestClasses>true</excludeTestClasses>
+                                    <agent>
+                                        <enabled>false</enabled>
+                                    </agent>
+                                    <mainClass>neqsim.process.raia.RaiaProcess</mainClass>
+                                    <sharedLibrary>true</sharedLibrary>
+                                    <imageName>neqsim</imageName>
+                                    <debugSymbols>true</debugSymbols>
+                                    <debug>true</debug>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-g</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                    </buildArgs>
                                 </configuration>
                             </execution>
                         </executions>
@@ -152,5 +170,4 @@
             </build>
         </profile>
     </profiles>
-
 </project>

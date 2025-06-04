@@ -1,0 +1,146 @@
+name: Multi Platform Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            profile: native-linux
+            dynlib_ext: so
+            static_ext: a
+            archlabel: linux
+
+          - os: windows-latest
+            profile: native-windows
+            dynlib_ext: dll
+            static_ext: lib
+            archlabel: windows
+
+          - os: macos-latest
+            profile: native-macos
+            dynlib_ext: dylib
+            static_ext: a
+            archlabel: macos-arm64
+
+    runs-on: ${{ matrix.os }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '24.0.1'
+          distribution: 'graalvm'
+          edition: 'ce'
+          components: 'native-image'
+          cache: 'maven'
+
+      - name: Print native-image version
+        run: native-image --version
+
+      - name: Install local JARs on Windows
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd java_graal
+          for %%f in (neqsim-*.jar) do (
+            echo Installing %%f
+            for /f "tokens=2 delims=-" %%v in ("%%~nf") do (
+              mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file ^
+                -Dfile="%%f" ^
+                -DgroupId="com.equinor.neqsim" ^
+                -DartifactId="neqsim" ^
+                -Dversion="%%v" ^
+                -Dpackaging="jar"
+            )
+          )
+
+      - name: Install local JARs on Unix/macOS
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cd java_graal
+          for jarfile in neqsim-*.jar; do
+            [[ -e "$jarfile" ]] || continue
+            version=$(echo "$jarfile" | sed -E 's/neqsim-(.*)\.jar/\1/')
+            echo "Installing $jarfile with version $version"
+            mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file \
+              -Dfile="$jarfile" \
+              -DgroupId="com.equinor.neqsim" \
+              -DartifactId="neqsim" \
+              -Dversion="$version" \
+              -Dpackaging="jar"
+          done
+
+      - name: Build with Maven native-image
+        run: |
+          cd java_graal
+          mvn -B package -P${{ matrix.profile }} --file pom.xml -ntp
+        shell: bash
+
+      - name: Create staging folder and copy artifacts
+        run: |
+          cd java_graal
+          mkdir staging-${{ matrix.archlabel }}
+          cp target/*.${{ matrix.dynlib_ext }} staging-${{ matrix.archlabel }}/ || true
+          cp target/*.${{ matrix.static_ext }} staging-${{ matrix.archlabel }}/ || true
+          cp target/*.h staging-${{ matrix.archlabel }}/ || true
+        shell: bash
+
+      - name: Zip artifacts on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path java_graal/staging-${{ matrix.archlabel }}/* `
+                           -DestinationPath java_graal/neqsim-${{ matrix.archlabel }}.zip
+
+      - name: Zip artifacts on Unix/macOS
+        if: runner.os != 'Windows'
+        run: |
+          cd java_graal/staging-${{ matrix.archlabel }}
+          zip -r ../neqsim-${{ matrix.archlabel }}.zip .
+        shell: bash
+
+      - name: Upload zipped artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-files-${{ matrix.archlabel }}
+          path: java_graal/neqsim-${{ matrix.archlabel }}.zip
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download all compiled artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir release-assets
+          cp all-artifacts/compiled-files-*/neqsim-*.zip release-assets/
+
+      - name: Create GitHub Draft Release
+        uses: ncipollo/release-action@v1.13.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: "NeqSim v${{ github.event.inputs.version }}"
+          tag: "v${{ github.event.inputs.version }}"
+          draft: true
+          generateReleaseNotes: true
+          replacesArtifacts: true
+          artifacts: release-assets/*.zip

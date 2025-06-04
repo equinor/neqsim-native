@@ -1,0 +1,139 @@
+name: Create draft macOS release for both arm64 and x64
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  compile_and_release:
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    runs-on: macos-latest
+    env:
+      GITHUB_USERNAME: ${{ secrets.USERNAME }}
+      GITHUB_TOKEN: ${{ secrets.TOKEN }}
+
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM CE
+        uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: 'graalvm'
+          edition: 'ce'
+          java-version: '24.0.0'
+          components: 'native-image'
+          cache: 'maven'
+
+      - name: Print native-image version
+        run: |
+          native-image --version
+
+      - name: Install neqsim JARs locally
+        run: |
+          cd java_graal
+          for f in neqsim-*.jar; do
+            echo "Installing $f"
+            version=$(echo $f | cut -d '-' -f2 | cut -d '.' -f1-3)
+            mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file \
+              -Dfile="$f" \
+              -DgroupId=com.equinor.neqsim \
+              -DartifactId=neqsim \
+              -Dversion="$version" \
+              -Dpackaging=jar
+          done
+
+      - name: Set architecture env flags
+        run: |
+          if [[ "${{ matrix.arch }}" == "arm64" ]]; then
+            echo "ARCH_OPTS=-Dsvm.targetArch=aarch64" >> $GITHUB_ENV
+          else
+            echo "ARCH_OPTS=-Dsvm.targetArch=amd64" >> $GITHUB_ENV
+          fi
+
+      - name: Build native image (.dylib)
+        run: |
+          cd java_graal
+          ./mvnw -B package -Pnative $ARCH_OPTS --file pom.xml -ntp
+
+      - name: Build static library (.a)
+        run: |
+          cd java_graal
+          native-image \
+            $ARCH_OPTS \
+            --no-fallback \
+            --libc=musl \
+            --static \
+            --static-libgcc \
+            --static-libstdc++ \
+            -H:Name=neqsim_static \
+            -H:CLibraryPath=target \
+            -H:+ReportExceptionStackTraces \
+            -cp target/neqsim-*.jar
+
+      - name: Create staging and rename artifacts
+        run: |
+          cd java_graal
+          mkdir staging-${{ matrix.arch }}
+          for f in target/*.dylib; do
+            cp "$f" "staging-${{ matrix.arch }}/$(basename "${f%.dylib}")-${{ matrix.arch }}.dylib"
+          done
+          for f in target/*.a; do
+            cp "$f" "staging-${{ matrix.arch }}/$(basename "${f%.a}")-${{ matrix.arch }}.a"
+          done
+          for f in target/*.h; do
+            cp "$f" "staging-${{ matrix.arch }}/$(basename "$f")"
+          done
+
+      - name: Create staging and rename artifacts
+        run: |
+          cd java_graal
+          mkdir staging-${{ matrix.arch }}
+          for f in target/*.dylib; do
+            cp "$f" "staging-${{ matrix.arch }}/$(basename "${f%.dylib}")-${{ matrix.arch }}.dylib"
+          done
+          for f in target/*.h; do
+            cp "$f" "staging-${{ matrix.arch }}/$(basename "$f")"
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-files-${{ matrix.arch }}
+          path: java_graal/staging-${{ matrix.arch }}/*.*
+
+  release:
+    runs-on: macos-latest
+    needs: compile_and_release
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Download all compiled artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+
+      - name: Combine all artifacts into release-assets
+        run: |
+          mkdir -p release-assets
+          cp -R all-artifacts/compiled-files-x64/* release-assets/
+          cp -R all-artifacts/compiled-files-arm64/* release-assets/
+          cp doc/README.md release-assets/
+
+      - name: Create draft release
+        uses: ncipollo/release-action@v1.13.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: NeqSim v${{ github.event.inputs.version }}
+          tag: v${{ github.event.inputs.version }}-mac
+          draft: true
+          generateReleaseNotes: true
+          replacesArtifacts: true
+          artifacts: "release-assets/**/*.*"

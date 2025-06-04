@@ -11,7 +11,7 @@ public class MockCDoublePointer implements CDoublePointer {
     private double[] values;
 
     public MockCDoublePointer() {
-        values = new double[10]; // Example size, adjust as needed
+        values = new double[1]; 
     }
 
     @Override

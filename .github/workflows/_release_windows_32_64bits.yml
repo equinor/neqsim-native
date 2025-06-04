@@ -1,0 +1,135 @@
+name: Create draft release for both 32 bits and 64 bits
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 1.0.1
+        required: true
+        default: '1.0.0'
+
+jobs:
+  compile_and_release:
+    strategy:
+      matrix:
+        arch: [x64, x86]
+    runs-on: windows-latest
+    env:
+      GITHUB_USERNAME: ${{ secrets.USERNAME }}
+      GITHUB_TOKEN: ${{ secrets.TOKEN }}
+
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM CE
+        uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: 'graalvm'
+          edition: 'ce'
+          java-version: '24.0.0'
+          components: 'native-image'
+          cache: 'maven'
+
+      - name: Print native-image version (optional)
+        shell: cmd
+        run: |
+          set PATH=%JAVA_HOME%\bin;%PATH%
+          native-image.cmd --version
+
+      - name: Install latest neqsim-*.jar locally
+        shell: cmd
+        run: |
+          cd java_graal
+          for %%f in (neqsim-*.jar) do (
+            echo Installing %%f
+            for /f "tokens=2 delims=-" %%v in ("%%~nf") do (
+              mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file ^
+                -Dfile="%%f" ^
+                -DgroupId="com.equinor.neqsim" ^
+                -DartifactId="neqsim" ^
+                -Dversion="%%v" ^
+                -Dpackaging="jar"
+            )
+          )
+
+      - name: Configure environment for ${{ matrix.arch }}
+        shell: cmd
+        run: |
+          IF "${{ matrix.arch }}"=="x86" (
+            set "JAVA_TOOL_OPTIONS=-Dsvm.targetArch=x86"
+            echo "Building for 32-bit architecture"
+          ) ELSE (
+            echo "Building for 64-bit architecture"
+          )
+
+      - name: Build with Maven (native) for ${{ matrix.arch }}
+        shell: cmd
+        run: |
+          set PATH=%JAVA_HOME%\bin;%PATH%
+          cd java_graal
+          IF "${{ matrix.arch }}"=="x86" (
+            call ./mvnw -B package -Pnative -Dsvm.targetArch=x86 --file pom.xml -ntp
+          ) ELSE (
+            call ./mvnw -B package -Pnative --file pom.xml -ntp
+          )
+
+      - name: Create staging and rename artifacts (${{ matrix.arch }})
+        shell: cmd
+        run: |
+          cd java_graal
+          mkdir staging-${{ matrix.arch }}
+          for %%f in (target\*.dll) do (
+            IF "${{ matrix.arch }}"=="x86" (
+              copy %%f staging-${{ matrix.arch }}\%%~nf-x86.dll
+            ) ELSE (
+              copy %%f staging-${{ matrix.arch }}\%%~nf.dll
+            )
+          )
+          for %%f in (target\*.lib) do (
+            IF "${{ matrix.arch }}"=="x86" (
+              copy %%f staging-${{ matrix.arch }}\%%~nf-x86.lib
+            ) ELSE (
+              copy %%f staging-${{ matrix.arch }}\%%~nf.lib
+            )
+          )
+          IF "${{ matrix.arch }}"=="x64" (
+            for %%f in (target\*.h) do copy %%f staging-${{ matrix.arch }}\%%~nxf
+          )
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-files-${{ matrix.arch }}
+          path: java_graal/staging-${{ matrix.arch }}/*.*
+
+  release:
+    runs-on: windows-latest
+    needs: compile_and_release
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Download all compiled artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+
+      - name: Combine all artifacts into release-assets
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path "release-assets"
+          Copy-Item -Path "all-artifacts/compiled-files-x64/*" -Destination "release-assets" -Force
+          Copy-Item -Path "all-artifacts/compiled-files-x86/*" -Destination "release-assets" -Force
+          Copy-Item -Path "doc/README.md" -Destination "release-assets" -Force
+
+      - name: Create draft release
+        uses: ncipollo/release-action@v1.13.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: NeqSim v${{ github.event.inputs.version }}
+          tag: v${{ github.event.inputs.version }}-win
+          draft: true
+          generateReleaseNotes: true
+          replacesArtifacts: true
+          artifacts: "release-assets/**/*.*"

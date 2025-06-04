@@ -1,4 +1,4 @@
-![Build maven](https://github.com/equinor/neqsim-native/actions/workflows/verify_build.yml/badge.svg?branch=master)
+[![Run Java Tests](https://github.com/equinor/neqsim-native/actions/workflows/verify_build.yml/badge.svg)](https://github.com/equinor/neqsim-native/actions/workflows/verify_build.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/equinor/neqsim/badge.svg)](https://snyk.io/test/github/equinor/neqsim)
 
 # Neqsim-Native
@@ -6,14 +6,21 @@
 The project compiles NeqSim java process simulation models into a shared library using GraalVM. This native image can be used directly or integrated into C/C++ programs, making it possible to implement it in process control systems with robust process simulation capabilities.
 
 # Releases
-For releases with binary binary files, see:
+For releases with binary files, see:
 https://github.com/equinor/neqsim-native/releases/
 
 # Use in Visual Studio
-See: example folder.
+See: example folder. Needed files:
 
-# Testing and documentation
-See: https://github.com/equinor/neqsim-native/tree/main/java_graal/src/test/java/neqsim
+![Files for compilation](images/files.png)
+
+#  Documentation
+Method documentation and input and output parameters are described in the [README](https://github.com/equinor/neqsim-native/blob/main/doc/README.md) file.
+The documentation is added manually in the README file by transfering the documentation from the java process model as found in under the [process folder](https://github.com/equinor/neqsim-native/tree/main/java_graal/src/main/java/neqsim).
+
+# Unit testing
+Unit testing is done as part of the build process.
+Tests can be seen here: https://github.com/equinor/neqsim-native/tree/main/java_graal/src/test/java/neqsim
 
 # NeqSim introduction
 NeqSim is the main part of the [NeqSim project](https://equinor.github.io/neqsimhome/). NeqSim (Non-Equilibrium Simulator) is a Java library for estimating fluid properties and process design.

@@ -52,5 +52,6 @@
       "installGradle": "false"
     },
     "ghcr.io/devcontainers-contrib/features/ant-sdkman:2": {}
-  }
+  },
+  "postCreateCommand": "sdk install java 23-graal"
 }

@@ -30,15 +30,13 @@ A shared library is created by activating this in the pom file:
 <sharedLibrary>true</sharedLibrary>
 ```
 
-At the moment the shared library/executable is created from the class [TestProcess](https://github.com/equinor/neqsim-native/blob/main/src/main/java/neqsim/process/TestProcess.java). The shared library/executable will be put in the target directory.
+The shared library/executable will be put in the target directory.
 
 See [documentation](https://www.graalvm.org/latest/reference-manual/native-image/guides/build-native-shared-library/).
 The shared libraries and header files can be integrated into third party C/C++ programs.
 
 ## Example
-In the following example we have established a TEG dehydration process.
+In the [example folder](https://github.com/equinor/neqsim-septic/tree/main/example), we demonstrate how the shared library can be used on both Windows and Linux/Unix systems.
 
-https://github.com/equinor/neqsim-native/blob/main/src/main/java/neqsim/process/TestProcess.java
 
-This code can be used from a c++ program as illustrated in the [example code](https://github.com/equinor/neqsim-native/blob/main/example/main.cpp).
 
