@@ -8,6 +8,15 @@ import org.graalvm.nativeimage.IsolateThread;
 
 public class WaterDewPoint {
 
+    /**
+     * Calculates the water dew point temperature for a given pressure and water content (ppm).
+     * This method is exposed as a C entry point for native access via GraalVM.
+     *
+     * @param thread    GraalVM isolate thread (required for native entry points)
+     * @param pressure  The system pressure in bar
+     * @param ppmWater  Water content in parts per million (ppm)
+     * @return          Calculated dew point temperature in degrees Celsius
+     */
     @CEntryPoint(name = "calcWaterDewPoint")
     public static double calcWaterDewPoint(IsolateThread thread, double pressure, double ppmWater) {
         // Create a new thermodynamic system
@@ -38,6 +47,15 @@ public class WaterDewPoint {
         return dewPointTemperature;
     }
 
+    /**
+     * Calculates the water content in gas at a given pressure and temperature.
+     * This method is exposed as a C entry point for native access via GraalVM.
+     *
+     * @param thread      GraalVM isolate thread (required for native entry points)
+     * @param pressure    The system pressure in bar
+     * @param temperature The system temperature in degrees Celsius
+     * @return            Water content in gas phase in parts per million (ppm)
+     */
     @CEntryPoint(name = "calcWaterInGas")
     public static double calcWaterInGas(IsolateThread thread, double pressure, double temperature) {
         // Create a new thermodynamic system
@@ -65,6 +83,11 @@ public class WaterDewPoint {
         return waterContent;
     }
 
+    /**
+     * Main method for example usage of the dew point and water-in-gas calculations.
+     *
+     * @param args Command line arguments (not used)
+     */
     public static void main(String[] args) {
         // Example usage
        System.out.println("Calculated water dew point temperature: " );
