@@ -49,7 +49,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>neqsim.process.raia.RaiaProcess</mainClass>
+                            <mainClass>neqsim.util.WaterDewPoint</mainClass>
                             <addClasspath>true</addClasspath>
                         </manifest>
                     </archive>
@@ -78,7 +78,7 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
-                                    <mainClass>neqsim.process.raia.RaiaProcess</mainClass>
+                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
                                     <debugSymbols>true</debugSymbols>
@@ -115,7 +115,7 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
-                                    <mainClass>neqsim.process.raia.RaiaProcess</mainClass>
+                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
                                     <debugSymbols>true</debugSymbols>
@@ -152,7 +152,7 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
-                                    <mainClass>neqsim.process.raia.RaiaProcess</mainClass>
+                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
                                     <debugSymbols>true</debugSymbols>

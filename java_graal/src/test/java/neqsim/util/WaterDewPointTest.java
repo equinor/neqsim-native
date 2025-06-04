@@ -1,12 +1,13 @@
 package neqsim.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.junit.jupiter.api.Test;
 
 import neqsim.thermo.system.SystemInterface;
 import neqsim.thermo.system.SystemSrkCPAstatoil;
 import neqsim.thermodynamicoperations.ThermodynamicOperations;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class WaterDewPointTest {
     
@@ -31,14 +32,13 @@ public class WaterDewPointTest {
         try {
             ops.waterDewPointTemperatureMultiphaseFlash();
         } catch (Exception e) {
-            e.printStackTrace();
+            fail("Exception during dew point calculation: " + e.getMessage());
         }
 
         // Get the calculated dew point temperature
         double dewPointTemperature = testSystem.getTemperature("C");
 
-        // Assert the expected value (this value should be adjusted based on expected
-        // results)
+        // Assert the expected value (this value should be adjusted based on expected results)
         assertEquals(-24.71094269, dewPointTemperature, 0.1,
                 "Dew point temperature is not as expected");
     }
@@ -63,7 +63,7 @@ public class WaterDewPointTest {
         try {
             ops.saturateWithWater();
         } catch (Exception e) {
-            e.printStackTrace();
+            fail("Exception during water saturation: " + e.getMessage());
         }
         double waterContent = testSystem.getPhase("gas").getComponent("water").getx() * 1e6;
         assertEquals(22.0, waterContent, 0.1, "Water content is not as expected");
