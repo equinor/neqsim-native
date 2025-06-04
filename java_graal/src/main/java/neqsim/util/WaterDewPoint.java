@@ -8,7 +8,7 @@ import org.graalvm.nativeimage.IsolateThread;
 
 public class WaterDewPoint {
 
-    //@CEntryPoint(name = "calcWaterDewPoint")
+    @CEntryPoint(name = "calcWaterDewPoint")
     public static double calcWaterDewPoint(IsolateThread thread, double pressure, double ppmWater) {
         // Create a new thermodynamic system
 
@@ -38,7 +38,7 @@ public class WaterDewPoint {
         return dewPointTemperature;
     }
 
-    //@CEntryPoint(name = "calcWaterInGas")
+    @CEntryPoint(name = "calcWaterInGas")
     public static double calcWaterInGas(IsolateThread thread, double pressure, double temperature) {
         // Create a new thermodynamic system
         double ppmWater = 100.0;
@@ -63,6 +63,13 @@ public class WaterDewPoint {
         double waterContent = testSystem.getPhase("gas").getComponent("water").getx() * 1e6;
 
         return waterContent;
+    }
+
+    public static void main(String[] args) {
+        // Example usage
+       System.out.println("Calculated water dew point temperature: " );
+
+        System.out.println("Calculated water content in gas: " );
     }
 
 }
