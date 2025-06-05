@@ -7,7 +7,6 @@ The calculations are done using a typical natural gas composition.
 ### Method theory
 https://ntnuopen.ntnu.no/ntnu-xmlui/handle/11250/281966?locale-attribute=en
 
-
 ### Method implementation
 https://github.com/equinor/neqsim-native/blob/main/java_graal/src/main/java/neqsim/util/WaterDewPoint.java
 
