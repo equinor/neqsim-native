@@ -1,10 +1,21 @@
-# Water dew point
+# Documantation of models functions in NeqSim shared library
 
-## Using Java Native Methods from C++
+## Water dew point and water in gas caculation
+The method uses the CPA-EoS for conversion between ppm water in gas and water dew point of natural gas. It also calculates ppm water in gas at given temperature and pressure.
+The calculations are done using a typical natural gas composition. 
+
+### Method theory
+https://ntnuopen.ntnu.no/ntnu-xmlui/handle/11250/281966?locale-attribute=en
+
+
+### Method implementation
+https://github.com/equinor/neqsim-native/blob/main/java_graal/src/main/java/neqsim/util/WaterDewPoint.java
+
+### Using Java Native Methods from C++
 
 You can call the native methods exported from Java (via GraalVM) in your C++ program using the generated shared library and header. Below is an example of how to use the `calcWaterDewPoint` and `calcWaterInGas` methods from a C++ program.
 
-### Example: Calling from C++
+#### Example: Calling from C++
 
 ```cpp
 #include <iostream>
