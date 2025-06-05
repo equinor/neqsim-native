@@ -3,7 +3,7 @@
 
 # Neqsim-Native
 
-The project compiles NeqSim java process simulation models into a shared library using GraalVM. This native image can be used directly or integrated into C/C++ programs, making it possible to implement it in process control systems with robust process simulation capabilities.
+The project compiles NeqSim java process simulation models into a shared library using GraalVM. This native image can be used directly or integrated into C/C++ programs, making it possible to implement it in process monitoring and control systems with robust simulation capabilities.
 
 # Releases
 For releases with binary files, see:
