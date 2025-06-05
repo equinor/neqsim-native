@@ -34,7 +34,7 @@ int main() {
     // Call the calcWaterDewPoint function and store the result
     double dew_point = calcWaterDewPoint(
         thread,       // GraalVM isolate thread
-        50.0,         // Example pressure (bar)
+        50.0,         // Example absolute pressure (bara)
         100.0         // Example water content (ppm)
     );
     std::cout << "Result of calcWaterDewPoint function call: " << dew_point << " C" << std::endl;
@@ -42,10 +42,10 @@ int main() {
     // Call the calcWaterInGas function and store the result
     double water_in_gas = calcWaterInGas(
         thread,       // GraalVM isolate thread
-        50.0,         // Example pressure (bar)
+        50.0,         // Example absolute pressure (bara)
         10.0          // Example temperature (C)
     );
-    std::cout << "Result of calcWaterInGas function call: " << water_in_gas << " ppm" << std::endl;
+    std::cout << "Result of calcWaterInGas function call: " << water_in_gas << " ppm (mole/volume)" << std::endl;
 
     // Destroy the GraalVM isolate
     int destroy_result = graal_detach_all_threads_and_tear_down_isolate(thread);
