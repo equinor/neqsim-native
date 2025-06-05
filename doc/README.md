@@ -4,6 +4,9 @@
 The method uses the CPA-EoS for conversion between ppm water in gas and water dew point of natural gas. It also calculates ppm water in gas at given temperature and pressure.
 The calculations are done using a typical natural gas composition. 
 
+### Online calculator
+https://neqsim.streamlit.app/Water_Dew_Point
+
 ### Method
 https://ntnuopen.ntnu.no/ntnu-xmlui/handle/11250/281966?locale-attribute=en
 
