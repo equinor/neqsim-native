@@ -1,4 +1,4 @@
-# Documantation of models functions in NeqSim shared library
+# Documantation of models and functions in te NeqSim shared library
 
 ## Water dew point and water in gas caculation
 The method uses the CPA-EoS for conversion between ppm water in gas and water dew point of natural gas. It also calculates ppm water in gas at given temperature and pressure.
