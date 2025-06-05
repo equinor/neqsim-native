@@ -19,18 +19,24 @@ then run the following command to add it to your local Maven repo:
 ```
 
 ## Commands
-To compile the project to native code (on windows use mvnw.cmd):
 
-```
-./mvnw -Pnative package
+To compile the project to native code:
+
+```bash
+# On Linux:
+./mvnw -Pnative-linux package
+
+# On Windows:
+./mvnw -Pnative-windows package
 ```
 
-A shared library is created by activating this in the pom file:
-```
+A shared library is created by activating this in the `pom.xml` file:
+
+```xml
 <sharedLibrary>true</sharedLibrary>
 ```
 
-The shared library/executable will be put in the target directory.
+The shared library or executable will be placed in the `target` directory.
 
 See [documentation](https://www.graalvm.org/latest/reference-manual/native-image/guides/build-native-shared-library/).
 The shared libraries and header files can be integrated into third party C/C++ programs.
