@@ -1,57 +1,61 @@
 {
-  "name": "Python 3",
+  "name": "Python & Java (GraalVM) Environment",
   "build": {
-      "dockerfile": "Dockerfile",
-      "context": "..",
-      "args": {
-          "VARIANT": "3.10",
-          "NODE_VERSION": "none"
-      }
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "args": {
+      "VARIANT": "3.10",
+      "NODE_VERSION": "none"
+    }
   },
+
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "24",
+      "jdkDistro": "graal",
+      "installMaven": "false",
+      "installGradle": "false"
+    }
+  },
+  
   "customizations": {
-      "vscode": {
-          "settings": {
-              "python.defaultInterpreterPath": "/usr/local/bin/python",
-              "python.formatting.provider": "black",
-              "python.formatting.autopep8Path": "/usr/local/py-utils/bin/autopep8",
-              "python.formatting.blackPath": "/usr/local/py-utils/bin/black",
-              "python.formatting.yapfPath": "/usr/local/py-utils/bin/yapf",
-              "python.linting.banditPath": "/usr/local/py-utils/bin/bandit",
-              "python.linting.flake8Path": "/usr/local/py-utils/bin/flake8",
-              "python.linting.mypyPath": "/usr/local/py-utils/bin/mypy",
-              "python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
-              "python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
-              "python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
-              "python.testing.pytestEnabled": true,
-              "python.testing.unittestEnabled": false,
-              "python.testing.nosetestsEnabled": false,
-              "python.testing.pytestArgs": ["tests"]
-          },
-          "extensions": [
-              "ms-python.python",
-              "ms-python.vscode-pylance",
-              "ms-toolsai.jupyter",
-              "ms-vscode.test-adapter-converter",
-              "ms-azuretools.vscode-docker",
-              "ms-python.pylint",
-              "ms-python.black-formatter",
-              "ms-python.flake8",
-              "ms-python.pylint",
-              "mathematic.vscode-pdf",
-              "ms-vscode.cpptools-extension-pack",
-              "GitHub.copilot"
-          ]
-      }
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black",
+        "python.formatting.autopep8Path": "/usr/local/py-utils/bin/autopep8",
+        "python.formatting.blackPath": "/usr/local/py-utils/bin/black",
+        "python.formatting.yapfPath": "/usr/local/py-utils/bin/yapf",
+        "python.linting.banditPath": "/usr/local/py-utils/bin/bandit",
+        "python.linting.flake8Path": "/usr/local/py-utils/bin/flake8",
+        "python.linting.mypyPath": "/usr/local/py-utils/bin/mypy",
+        "python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
+        "python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
+        "python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.nosetestsEnabled": false,
+        "python.testing.pytestArgs": [
+          "tests"
+        ]
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter",
+        "ms-vscode.test-adapter-converter",
+        "ms-azuretools.vscode-docker",
+        "ms-python.pylint",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.pylint",
+        "mathematic.vscode-pdf",
+        "ms-vscode.cpptools-extension-pack",
+        "GitHub.copilot",
+        "vscjava.vscode-java-pack"
+      ]
+    }
   },
   "forwardPorts": [],
-  "remoteUser": "vscode",
-  "features": {
-      "ghcr.io/devcontainers/features/java:1": {
-      "version": "none",
-      "installMaven": "true",
-      "installGradle": "false"
-    },
-    "ghcr.io/devcontainers-contrib/features/ant-sdkman:2": {}
-  },
-  "postCreateCommand": "sdk install java 23-graal"
+  "remoteUser": "vscode"
 }
