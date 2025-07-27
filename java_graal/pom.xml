@@ -88,7 +88,8 @@
                                         <buildArg>-g</buildArg>
                                         <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
                                         <buildArg>--H:+TrackPrimitiveValues</buildArg>
-                                        <buildArg>-H:+UsePredicates</buildArgs></buildArg>
+                                        <buildArg>--H:+UsePredicates</buildArg>
+                                    </buildArgs>
                                 </configuration>
                             </execution>
                         </executions>
