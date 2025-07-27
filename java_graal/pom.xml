@@ -87,8 +87,8 @@
                                         <buildArg>--no-fallback</buildArg>
                                         <buildArg>-g</buildArg>
                                         <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
-                                        <buildArg>--H:+TrackPrimitiveValues</buildArg>
-                                        <buildArg>--H:+UsePredicates</buildArg>
+                                        <buildArg>-H:+TrackPrimitiveValues</buildArg>
+                                        <buildArg>-H:+UsePredicates</buildArg>
                                     </buildArgs>
                                 </configuration>
                             </execution>
