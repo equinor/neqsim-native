@@ -11,7 +11,7 @@ Learn and ask questions in [Discussions for use and development of NeqSim](https
 2. Review the [GraalVM Getting Started Guide](https://www.graalvm.org/latest/docs/getting-started/)
 3. Review [native compilation documentation](https://www.graalvm.org/latest/reference-manual/native-image/) with GraalVM
 
-The project is built into native code (e.g., shared libraries or executables) using the Maven build system. All NeqSim dependencies are specified in the `pom.xml` file. Since NeqSim is not available in a public Maven repository, it is included as a local JAR dependency.
+The project is built into native code (e.g., shared libraries or executables) using the Maven build system. All dependencies are specified in the `pom.xml` file and resolved from Maven Central.
 
 ## Commands
 

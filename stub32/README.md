@@ -13,10 +13,12 @@ This directory contains the source code for a thin **32-bit stub DLL** that enab
                                                       └──────────────────────────┘
 ```
 
-GraalVM `native-image` only produces 64-bit binaries. This two-process architecture bridges the gap so that 32-bit applications can use NeqSim with **zero source code changes**:
+GraalVM `native-image` only produces 64-bit binaries. This two-process architecture bridges the gap so that 32-bit applications can use NeqSim:
 
 1. **`neqsim_server.exe`** — A 64-bit GraalVM native-image executable that hosts the real NeqSim process models and listens on TCP port 19876.
-2. **`neqsim.dll`** (32-bit) — A thin C stub that exports the **same function signatures** as the original 64-bit GraalVM-produced DLL. It forwards calls to the server over a local TCP socket using a binary protocol.
+2. **`neqsim.dll`** (32-bit) — A thin C stub that forwards calls to the server over a local TCP socket using a binary protocol.
+
+> **API note:** The stub uses output-pointer signatures (`void` + `double*` result + `int*` quality) for all functions, which differs from the 64-bit GraalVM DLL where `calcWaterDewPoint` and `calcWaterInGas` return `double` directly. Python model functions (`PY_*`) use the same pointer-based signature in both variants. See [neqsim_stub.h](neqsim_stub.h) for the stub API.
 
 ## Quick Start
 
@@ -45,7 +47,9 @@ your_app/
 
 ### 3. Use exactly like the 64-bit DLL
 
-The stub DLL exports the same functions with identical signatures. Existing code that links against the 64-bit `neqsim.dll` works without changes:
+The stub DLL exports functions with the same names. Note that `calcWaterDewPoint` and `calcWaterInGas` use output-pointer signatures in the stub (see `neqsim_stub.h`), while the 64-bit GraalVM DLL returns `double` directly. Python functions (`PY_*`) have identical signatures in both variants.
+
+Usage example with the stub API:
 
 ```cpp
 #include "neqsim.h"   // or "neqsim_stub.h" — same API
@@ -91,7 +95,7 @@ Make sure you are in a **32-bit** Developer Command Prompt (or ran `vcvarsall.ba
 
 ## API Reference
 
-The stub DLL exports the exact same functions as the 64-bit `neqsim.dll`:
+The stub DLL exports the following functions (see `neqsim_stub.h` for exact signatures):
 
 | Function | Description |
 |---|---|
