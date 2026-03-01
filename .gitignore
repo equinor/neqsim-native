@@ -1,28 +1,58 @@
-# Compiled class file
+# === Java / Maven ===
 *.class
-
-# Log file
-*.log
-
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
+*.jar
 *.war
 *.nar
 *.ear
+java_graal/target/
+
+# === Native build artifacts ===
+*.dll
+*.so
+*.dylib
+*.lib
+*.obj
+*.o
+*.exe
+*.pdb
+*.exp
+*.ilk
+
+# === Stub32 build output ===
+stub32/dist/
+
+# === Archives ===
 *.zip
 *.tar.gz
 *.rar
 
+# === IDE / Editor ===
+.vscode/
+.idea/
+*.iml
+*.suo
+*.user
+*.sln
+*.vcxproj*
+.project
+.classpath
+.settings/
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# === OS files ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Logs / crash dumps ===
+*.log
 hs_err_pid*
 replay_pid*
 
-# Ignore the Release directory
+# === Visual Studio build dirs ===
 example/windows/Release/
 example/windows/Debug/
+example/windows/x64/
+
+# === Misc ===
+*.ctxt
+.mtj.tmp/
