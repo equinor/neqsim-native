@@ -14,34 +14,37 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <graalvm.svm.version>23.1.2</graalvm.svm.version>
-        <graalvm.buildtools.version>0.10.6</graalvm.buildtools.version>
+        <graalvm.svm.version>25.0.1</graalvm.svm.version>
+        <graalvm.polyglot.version>25.0.1</graalvm.polyglot.version>
+        <graalvm.buildtools.version>0.11.3</graalvm.buildtools.version>
+        <!-- Default: skip long-running simulation tests. Override with -Dsurefire.excludedGroups= -->
+        <surefire.excludedGroups>integration</surefire.excludedGroups>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.equinor.neqsim</groupId>
             <artifactId>neqsim</artifactId>
-            <version>3.0.26</version>
-        </dependency>
-        <!-- GraalVM Substrate VM (provides @CEntryPoint, CDoublePointer, etc.) -->
-        <dependency>
-            <groupId>org.graalvm.sdk</groupId>
-            <artifactId>graal-sdk</artifactId>
-            <version>${graalvm.svm.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- Polyglot API (Context, Source, Value — used by PythonProcessRunner) -->
-        <dependency>
-            <groupId>org.graalvm.polyglot</groupId>
-            <artifactId>polyglot</artifactId>
-            <version>${graalvm.svm.version}</version>
+            <version>3.2.1</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.12.2</version>
+            <version>5.11.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.nativeimage</groupId>
+            <artifactId>svm</artifactId>
+            <version>${graalvm.svm.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- GraalVM Polyglot API — always present for compilation;
+             the Python *runtime* is added by the 'with-python' profile. -->
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>polyglot</artifactId>
+            <version>${graalvm.polyglot.version}</version>
         </dependency>
     </dependencies>
 
@@ -49,24 +52,24 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
+                <configuration>
+                    <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.14.1</version>
                 <configuration>
                     <fork>true</fork>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
-                <configuration>
-                    <excludedGroups>integration</excludedGroups>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.5.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -76,150 +79,51 @@
                     </archive>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-versions</id>
+                        <goals><goal>enforce</goal></goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[3.9.0,)</version>
+                                    <message>Maven 3.9+ is required.</message>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>[21,)</version>
+                                    <message>Java 21+ is required.</message>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <profiles>
-        <!-- ============================================================
-             with-python: Adds GraalPy runtime for Python process models.
-             Activate alongside a native-* profile, e.g.:
-               ./mvnw -Pnative-linux,with-python package
-             ============================================================ -->
+        <!-- Activating 'with-python' adds GraalPy so Python process models are
+             embedded in the native image. Omit this profile for default builds. -->
         <profile>
             <id>with-python</id>
             <dependencies>
+                <!-- GraalPy language runtime -->
                 <dependency>
                     <groupId>org.graalvm.polyglot</groupId>
-                    <artifactId>python-community</artifactId>
-                    <version>${graalvm.svm.version}</version>
+                    <artifactId>python</artifactId>
+                    <version>${graalvm.polyglot.version}</version>
                     <type>pom</type>
                 </dependency>
             </dependencies>
         </profile>
 
-        <!-- ============================================================
-             Default "lean" builds (no Python — recommended)
-             Activate explicitly:
-               ./mvnw -Pnative-linux-lean package
-               mvnw.cmd -Pnative-windows-lean package
-               ./mvnw -Pnative-macos-lean package
-             ============================================================ -->
-        <profile>
-            <id>native-linux-lean</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.graalvm.buildtools</groupId>
-                        <artifactId>native-maven-plugin</artifactId>
-                        <version>${graalvm.buildtools.version}</version>
-                        <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <id>build-shared-lib-linux-lean</id>
-                                <goals><goal>compile-no-fork</goal></goals>
-                                <configuration>
-                                    <excludeTestClasses>true</excludeTestClasses>
-                                    <agent>
-                                        <enabled>false</enabled>
-                                    </agent>
-                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
-                                    <sharedLibrary>true</sharedLibrary>
-                                    <imageName>neqsim</imageName>
-                                    <debugSymbols>true</debugSymbols>
-                                    <debug>true</debug>
-                                    <buildArgs>
-                                        <buildArg>--no-fallback</buildArg>
-                                        <buildArg>-g</buildArg>
-                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
-                                        <buildArg>-H:+TrackPrimitiveValues</buildArg>
-                                        <buildArg>-H:+UsePredicates</buildArg>
-                                    </buildArgs>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>native-macos-lean</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.graalvm.buildtools</groupId>
-                        <artifactId>native-maven-plugin</artifactId>
-                        <version>${graalvm.buildtools.version}</version>
-                        <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <id>build-shared-lib-macos-lean</id>
-                                <goals><goal>compile-no-fork</goal></goals>
-                                <configuration>
-                                    <excludeTestClasses>true</excludeTestClasses>
-                                    <agent>
-                                        <enabled>false</enabled>
-                                    </agent>
-                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
-                                    <sharedLibrary>true</sharedLibrary>
-                                    <imageName>neqsim</imageName>
-                                    <debugSymbols>true</debugSymbols>
-                                    <debug>true</debug>
-                                    <buildArgs>
-                                        <buildArg>--no-fallback</buildArg>
-                                        <buildArg>-g</buildArg>
-                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
-                                    </buildArgs>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>native-windows-lean</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.graalvm.buildtools</groupId>
-                        <artifactId>native-maven-plugin</artifactId>
-                        <version>${graalvm.buildtools.version}</version>
-                        <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <id>build-shared-lib-windows-lean</id>
-                                <goals><goal>compile-no-fork</goal></goals>
-                                <configuration>
-                                    <excludeTestClasses>true</excludeTestClasses>
-                                    <agent>
-                                        <enabled>false</enabled>
-                                    </agent>
-                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
-                                    <sharedLibrary>true</sharedLibrary>
-                                    <imageName>neqsim</imageName>
-                                    <debugSymbols>true</debugSymbols>
-                                    <debug>true</debug>
-                                    <buildArgs>
-                                        <buildArg>--no-fallback</buildArg>
-                                        <buildArg>-g</buildArg>
-                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
-                                    </buildArgs>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <!-- ============================================================
-             With-Python builds (use alongside with-python profile)
-             Activate explicitly:
-               ./mvnw -Pnative-linux,with-python package
-               mvnw.cmd -Pnative-windows,with-python package
-               ./mvnw -Pnative-macos,with-python package
-             ============================================================ -->
+        <!-- =============================================================
+             With-Python profiles (opt-in, -Ob for CI build speed)
+             Usage: mvn -Pnative-windows,with-python package
+             ============================================================= -->
         <profile>
             <id>native-linux</id>
             <build>
@@ -234,21 +138,16 @@
                                 <id>build-shared-lib-linux</id>
                                 <goals><goal>compile-no-fork</goal></goals>
                                 <configuration>
-                                    <excludeTestClasses>true</excludeTestClasses>
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
                                     <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
-                                    <debugSymbols>true</debugSymbols>
-                                    <debug>true</debug>
                                     <buildArgs>
                                         <buildArg>--no-fallback</buildArg>
-                                        <buildArg>-g</buildArg>
                                         <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
-                                        <buildArg>-H:+TrackPrimitiveValues</buildArg>
-                                        <buildArg>-H:+UsePredicates</buildArg>
+                                        <buildArg>-Ob</buildArg>
                                     </buildArgs>
                                 </configuration>
                             </execution>
@@ -272,19 +171,16 @@
                                 <id>build-shared-lib-macos</id>
                                 <goals><goal>compile-no-fork</goal></goals>
                                 <configuration>
-                                    <excludeTestClasses>true</excludeTestClasses>
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
                                     <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
-                                    <debugSymbols>true</debugSymbols>
-                                    <debug>true</debug>
                                     <buildArgs>
                                         <buildArg>--no-fallback</buildArg>
-                                        <buildArg>-g</buildArg>
                                         <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                        <buildArg>-Ob</buildArg>
                                     </buildArgs>
                                 </configuration>
                             </execution>
@@ -308,19 +204,16 @@
                                 <id>build-shared-lib-windows</id>
                                 <goals><goal>compile-no-fork</goal></goals>
                                 <configuration>
-                                    <excludeTestClasses>true</excludeTestClasses>
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
                                     <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
-                                    <debugSymbols>true</debugSymbols>
-                                    <debug>true</debug>
                                     <buildArgs>
                                         <buildArg>--no-fallback</buildArg>
-                                        <buildArg>-g</buildArg>
                                         <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                        <buildArg>-Ob</buildArg>
                                     </buildArgs>
                                 </configuration>
                             </execution>
@@ -330,14 +223,8 @@
             </build>
         </profile>
 
-        <!-- ============================================================
-             Server EXE build (for 32-bit stub support — Windows only)
-             Builds a standalone executable (not a shared library) that
-             hosts the NeqSim process models behind a TCP server.
-             Activate explicitly:
-               mvnw.cmd -Pnative-server-windows package
-               mvnw.cmd -Pnative-server-windows,with-python package
-             ============================================================ -->
+        <!-- Server profile: builds a 64-bit EXE that hosts NeqSim behind a TCP/named-pipe
+             interface, allowing a thin 32-bit stub DLL to forward calls to it. -->
         <profile>
             <id>native-server-windows</id>
             <build>
@@ -352,7 +239,6 @@
                                 <id>build-server-exe-windows</id>
                                 <goals><goal>compile-no-fork</goal></goals>
                                 <configuration>
-                                    <excludeTestClasses>true</excludeTestClasses>
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
@@ -362,6 +248,159 @@
                                     <buildArgs>
                                         <buildArg>--no-fallback</buildArg>
                                         <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                        <buildArg>-Ob</buildArg>
+                                    </buildArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- =============================================================
+             Default profiles (no Python, -Ob for CI compatibility)
+             These are the recommended profiles for most users.
+             Usage: mvn -Pnative-windows-lean package
+             ============================================================= -->
+        <profile>
+            <id>native-linux-lean</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${graalvm.buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-shared-lib-linux-lean</id>
+                                <goals><goal>compile-no-fork</goal></goals>
+                                <configuration>
+                                    <agent>
+                                        <enabled>false</enabled>
+                                    </agent>
+                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
+                                    <sharedLibrary>true</sharedLibrary>
+                                    <imageName>neqsim</imageName>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                        <!-- Linux CI runners have ~6.3 GB RAM / 2 threads;
+                                             -Os and -H:+StripDebugInfo both OOM during
+                                             compilation. Use -Ob on CI; strip debug info
+                                             post-build with 'strip' command instead.
+                                             Build locally with -Os on machines with ≥16 GB. -->
+                                        <buildArg>-Ob</buildArg>
+                                    </buildArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>native-macos-lean</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${graalvm.buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-shared-lib-macos-lean</id>
+                                <goals><goal>compile-no-fork</goal></goals>
+                                <configuration>
+                                    <agent>
+                                        <enabled>false</enabled>
+                                    </agent>
+                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
+                                    <sharedLibrary>true</sharedLibrary>
+                                    <imageName>neqsim</imageName>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                        <!-- macOS CI runners have only 7.5 GB RAM;
+                                             -O2 OOMs during compilation. Use -Ob on CI;
+                                             build locally with -O2 on machines with ≥16 GB.
+                                             Note: -H:+StripDebugInfo is not supported on macOS. -->
+                                        <buildArg>-Ob</buildArg>
+                                    </buildArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>native-windows-lean</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${graalvm.buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-shared-lib-windows-lean</id>
+                                <goals><goal>compile-no-fork</goal></goals>
+                                <configuration>
+                                    <agent>
+                                        <enabled>false</enabled>
+                                    </agent>
+                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
+                                    <sharedLibrary>true</sharedLibrary>
+                                    <imageName>neqsim</imageName>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                        <!-- Windows CI runners have ~8.5 GB RAM;
+                                             -O2 OOMs during compilation. Use -Ob on CI;
+                                             build locally with -O2 on machines with ≥16 GB. -->
+                                        <buildArg>-Ob</buildArg>
+                                        <buildArg>-H:+StripDebugInfo</buildArg>
+                                    </buildArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>native-server-windows-lean</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${graalvm.buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-server-exe-windows-lean</id>
+                                <goals><goal>compile-no-fork</goal></goals>
+                                <configuration>
+                                    <agent>
+                                        <enabled>false</enabled>
+                                    </agent>
+                                    <mainClass>neqsim.server.NeqSimPipeServer</mainClass>
+                                    <sharedLibrary>false</sharedLibrary>
+                                    <imageName>neqsim_server</imageName>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                        <!-- Same CI RAM constraint as native-windows-lean -->
+                                        <buildArg>-Ob</buildArg>
+                                        <buildArg>-H:+StripDebugInfo</buildArg>
                                     </buildArgs>
                                 </configuration>
                             </execution>

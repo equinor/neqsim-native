@@ -57,40 +57,6 @@ jobs:
       - name: Print native-image version
         run: native-image --version
 
-      - name: Install local JARs on Windows
-        if: runner.os == 'Windows'
-        shell: cmd
-        run: |
-          cd java_graal
-          for %%f in (neqsim-*.jar) do (
-            echo Installing %%f
-            for /f "tokens=2 delims=-" %%v in ("%%~nf") do (
-              mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file ^
-                -Dfile="%%f" ^
-                -DgroupId="com.equinor.neqsim" ^
-                -DartifactId="neqsim" ^
-                -Dversion="%%v" ^
-                -Dpackaging="jar"
-            )
-          )
-
-      - name: Install local JARs on Unix/macOS
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          cd java_graal
-          for jarfile in neqsim-*.jar; do
-            [[ -e "$jarfile" ]] || continue
-            version=$(echo "$jarfile" | sed -E 's/neqsim-(.*)\.jar/\1/')
-            echo "Installing $jarfile with version $version"
-            mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file \
-              -Dfile="$jarfile" \
-              -DgroupId="com.equinor.neqsim" \
-              -DartifactId="neqsim" \
-              -Dversion="$version" \
-              -Dpackaging="jar"
-          done
-
       - name: Build with Maven native-image (default)
         run: |
           cd java_graal
