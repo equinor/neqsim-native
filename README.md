@@ -14,6 +14,7 @@ NeqSim is the main part of the [NeqSim project](https://equinor.github.io/neqsim
 - [Releases](#releases)
 - [Features](#features)
 - [Requirements](#requirements)
+- [Development Environment](#development-environment)
 - [Installation](#installation)
 - [Automated Build Process](#automated-build-process)
 - [Creating a Release](#creating-a-release)
@@ -103,6 +104,30 @@ Tests can be seen here: https://github.com/equinor/neqsim-native/tree/main/java_
 - **Maven** — included via the Maven wrapper (`mvnw` / `mvnw.cmd`)
 - **Git** — for cloning the repository
 - **Visual Studio Build Tools** (Windows only) — for the MSVC toolchain used by `native-image`
+- **build-essential + zlib1g-dev** (Linux only) — C toolchain and compression library for `native-image`
+
+## Development Environment
+
+### GitHub Codespaces / VS Code Dev Containers (recommended)
+
+The easiest way to get started is to open the repository in a **GitHub Codespace** or a local **VS Code Dev Container**. The devcontainer is pre-configured with GraalVM 25, `native-image`, and the C/C++ toolchain — everything needed to build and test the project.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&repo=equinor/neqsim-native)
+
+**To open locally in VS Code:**
+
+1. Install [Docker](https://www.docker.com/) and the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+2. Open the repository folder in VS Code
+3. When prompted, click **"Reopen in Container"** (or run `Dev Containers: Reopen in Container` from the command palette)
+4. The container will build, install GraalVM 25, and run `mvnw verify` automatically
+
+Once inside the container you can build the native library immediately:
+
+```bash
+cd java_graal
+./mvnw -Pnative-linux-lean package          # default build (Java models only)
+./mvnw -Pnative-linux,with-python package   # with Python support
+```
 
 ## Installation
 
@@ -252,6 +277,9 @@ See the [example/](example/) folder for complete C++ projects on both Windows an
 
 ```
 neqsim-native/
+├── .devcontainer/           # Dev Container / Codespaces configuration
+│   ├── devcontainer.json    # GraalVM 25, extensions, post-create command
+│   └── Dockerfile           # Base image with native-image prerequisites
 ├── java_graal/              # NeqSim process models and GraalVM build configurations
 │   ├── src/
 │   │   ├── main/java/neqsim/
