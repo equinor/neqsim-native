@@ -10,53 +10,78 @@ on:
     branches: 
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   run_test:
-    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: read
+
     env:
-      GITHUB_USERNAME: ${{ secrets.USERNAME }}
-      GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      # Used by java_graal/settings.xml to access GitHub Packages, if needed
+      GITHUB_USERNAME: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     steps:
       - name: Check out project
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
         with:
           distribution: 'temurin'
           java-version: '21'
           cache: 'maven'
+            
+      - name: Run unit tests
+        working-directory: java_graal
+        run: ./mvnw -B test --file pom.xml -ntp
 
-      - name: Run unit tests with Temurin JDK
-        shell: bash
-        run: |
-          cd java_graal
-          ./mvnw -B test --file pom.xml -ntp
-
-  verify_native_image:
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build_32bit_stub:
+    timeout-minutes: 10
+    runs-on: windows-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Check out project
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '25.0.1'
-          distribution: 'graalvm'
-          edition: 'ce'
-          components: 'native-image'
-          cache: 'maven'
-
-      - name: Print native-image version
-        run: native-image --version
-
-      - name: Verify native-image compilation
-        shell: bash
+      - name: Find vcvarsall.bat
+        id: msvc
+        shell: cmd
         run: |
-          cd java_graal
-          ./mvnw -B package -Pnative-linux-lean --file pom.xml -ntp
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do set "VSDIR=%%i"
+          echo VCVARS=%VSDIR%\VC\Auxiliary\Build\vcvarsall.bat>> "%GITHUB_ENV%"
+
+      - name: Compile 32-bit stub DLL
+        shell: cmd
+        run: |
+          call "%VCVARS%" x86
+          cd stub32
+          if not exist dist mkdir dist
+          cl /nologo /W4 /O2 /LD /D NEQSIM_STUB_EXPORTS neqsim_stub.c ws2_32.lib /Fe:dist\neqsim.dll /Fo:dist\neqsim_stub.obj /link /DEF:neqsim_stub.def /IMPLIB:dist\neqsim.lib
+          if errorlevel 1 exit /b 1
+          echo 32-bit stub DLL compiled successfully
+
+      - name: Verify DLL is 32-bit
+        shell: cmd
+        run: |
+          call "%VCVARS%" x86
+          dumpbin /headers stub32\dist\neqsim.dll | findstr "machine"
+
+      - name: Verify exported functions
+        shell: cmd
+        run: |
+          call "%VCVARS%" x86
+          dumpbin /exports stub32\dist\neqsim.dll | findstr /R "calc PY_ graal_"

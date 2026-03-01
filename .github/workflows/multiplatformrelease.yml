@@ -8,17 +8,248 @@ on:
         required: true
         default: '1.0.0'
       include_python:
-        description: 'Include Python (GraalPy) builds?'
-        required: false
+        description: 'Include Python (GraalPy) builds? Adds ~300 MB to DLL size and ~40 min to build time.'
         type: boolean
+        required: false
         default: false
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.inputs.version }}
+  cancel-in-progress: false
+
 jobs:
-  build:
+  # ==================================================================
+  #  64-bit native shared libraries with Python (Linux, Windows)
+  #  macOS is excluded from with-python builds — the CI runner
+  #  has only 7.5 GB RAM / 3 cores, which causes compilation timeouts
+  #  even with -Ob.  Use the default build for macOS, or build locally
+  #  on a machine with ≥16 GB RAM.
+  # ==================================================================
+  build-python:
+    if: ${{ github.event.inputs.include_python == 'true' }}
+    timeout-minutes: 90
     strategy:
       matrix:
         include:
-          # --- Default builds (always) ---
+          - os: ubuntu-latest
+            profile: native-linux
+            dynlib_ext: so
+            static_ext: a
+            archlabel: linux-x64-python
+
+          - os: windows-latest
+            profile: native-windows
+            dynlib_ext: dll
+            static_ext: lib
+            archlabel: windows-x64-python
+
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: java_graal
+        shell: bash
+
+    steps:
+      - name: Check out project
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # GraalVM native-image with GraalPy needs ~20 GB of virtual memory.
+      # GitHub-hosted runners only have 7-8 GB RAM, so we add swap/pagefile.
+      - name: Configure swap (Linux)
+        if: runner.os == 'Linux'
+        uses: pierotofy/set-swap-space@fc79b3f67fa8a838184ce84a674ca12238d2c761 # master
+        with:
+          swap-size-gb: 16
+
+      - name: Configure pagefile (Windows)
+        if: runner.os == 'Windows'
+        uses: al-cheb/configure-pagefile-action@a3b6ebd6b634da88790d9c58d4b37a7f4a7b8708 # v1.4
+        with:
+          minimum-size: 24GB
+          maximum-size: 24GB
+          disk-root: 'D:'
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1 # v1.4.5
+        with:
+          java-version: '25.0.1'
+          distribution: 'graalvm'
+          components: 'native-image'
+          cache: 'maven'
+
+      - name: Print native-image version (non-Windows)
+        if: runner.os != 'Windows'
+        run: native-image --version
+
+      - name: Print native-image version (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: native-image.cmd --version
+
+      - name: Compute ARCH_LABEL
+        id: arch
+        run: |
+          label="${{ matrix.archlabel }}"
+          zip_name="neqsim-${label}.zip"
+
+          echo "ARCH_LABEL=$label" >> "$GITHUB_ENV"
+          echo "ZIP_NAME=$zip_name" >> "$GITHUB_ENV"
+          echo "arch_label=$label" >> "$GITHUB_OUTPUT"
+          echo "zip_name=$zip_name" >> "$GITHUB_OUTPUT"
+
+      - name: Build with Maven native-image
+        run: mvn -B package -P${{ matrix.profile }},with-python --file pom.xml -ntp
+
+      - name: Create staging folder and copy artifacts
+        run: |
+          staging="staging-${ARCH_LABEL}"
+          mkdir -p "$staging"
+
+          shopt -s nullglob
+          for f in target/*.${{ matrix.dynlib_ext }} target/*.${{ matrix.static_ext }} target/*.h; do
+            cp "$f" "$staging/"
+          done
+
+          echo "Staged files:"
+          ls -la "$staging" || true
+
+      - name: Zip artifacts
+        shell: pwsh
+        run: |
+          $stagingDir = "staging-$($env:ARCH_LABEL)"
+          $zipFile = "$($env:ZIP_NAME)"
+          Compress-Archive -Path "$stagingDir/*" -DestinationPath $zipFile -Force
+
+      - name: Upload zipped artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: compiled-files-${{ steps.arch.outputs.arch_label }}
+          path: java_graal/${{ steps.arch.outputs.zip_name }}
+          overwrite: true
+
+  # ==================================================================
+  #  32-bit stub DLL + 64-bit server EXE with Python (Windows only)
+  #
+  #  Produces a package that allows 32-bit applications to call NeqSim
+  #  via a thin TCP stub DLL that communicates with a 64-bit server.
+  # ==================================================================
+  build-windows-x86-python:
+    if: ${{ github.event.inputs.include_python == 'true' }}
+    timeout-minutes: 90
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out project
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # GraalVM native-image with GraalPy needs ~20 GB of virtual memory.
+      - name: Configure pagefile
+        uses: al-cheb/configure-pagefile-action@a3b6ebd6b634da88790d9c58d4b37a7f4a7b8708 # v1.4
+        with:
+          minimum-size: 24GB
+          maximum-size: 24GB
+          disk-root: 'D:'
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1 # v1.4.5
+        with:
+          java-version: '25.0.1'
+          distribution: 'graalvm'
+          components: 'native-image'
+          cache: 'maven'
+
+      # --- 0) Find MSVC toolchain dynamically -----------------------
+      - name: Find vcvarsall.bat
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do set "VSDIR=%%i"
+          echo VCVARS=%VSDIR%\VC\Auxiliary\Build\vcvarsall.bat>> "%GITHUB_ENV%"
+
+      # --- 1) Build 64-bit server EXE via GraalVM native-image -------
+      - name: Build 64-bit neqsim_server.exe
+        shell: cmd
+        working-directory: java_graal
+        run: |
+          call "%VCVARS%" x64
+          call mvnw.cmd -Pnative-server-windows,with-python package -DskipTests -ntp
+          if errorlevel 1 exit /b 1
+          echo Server EXE built successfully.
+
+      # --- 2) Compress server EXE with UPX -------------------------
+      - name: Compress server EXE with UPX
+        shell: pwsh
+        run: |
+          choco install upx -y
+          $exe = "java_graal\target\neqsim_server.exe"
+          Write-Host "Before UPX: $((Get-Item $exe).Length / 1MB) MB"
+          upx --best --lzma $exe
+          Write-Host "After  UPX: $((Get-Item $exe).Length / 1MB) MB"
+
+      # --- 3) Build 32-bit stub DLL via MSVC x86 ---------------------
+      - name: Build 32-bit neqsim stub DLL
+        shell: cmd
+        run: |
+          call "%VCVARS%" x86
+          cd stub32
+          if not exist dist mkdir dist
+          cl /nologo /W4 /O2 /LD /D NEQSIM_STUB_EXPORTS neqsim_stub.c ws2_32.lib /Fe:dist\neqsim.dll /Fo:dist\neqsim_stub.obj /link /DEF:neqsim_stub.def /IMPLIB:dist\neqsim.lib
+          if errorlevel 1 exit /b 1
+          echo 32-bit stub DLL built successfully.
+
+      # --- 4) Verify outputs ----------------------------------------
+      - name: Verify 32-bit DLL exports
+        shell: cmd
+        run: |
+          call "%VCVARS%" x86
+          echo --- DLL architecture ---
+          dumpbin /headers stub32\dist\neqsim.dll | findstr "machine"
+          echo --- Exported functions ---
+          dumpbin /exports stub32\dist\neqsim.dll | findstr /R "calc PY_ graal_"
+
+      # --- 5) Stage and zip ------------------------------------------
+      - name: Package 32-bit distribution
+        shell: pwsh
+        run: |
+          $staging = "staging-windows-x86-python"
+          New-Item -ItemType Directory -Force -Path $staging | Out-Null
+
+          # 64-bit server EXE
+          Copy-Item "java_graal\target\neqsim_server.exe" "$staging\"
+
+          # 32-bit stub DLL, import lib, header
+          Copy-Item "stub32\dist\neqsim.dll"  "$staging\"
+          Copy-Item "stub32\dist\neqsim.lib"  "$staging\"
+          Copy-Item "stub32\neqsim_stub.h"    "$staging\neqsim.h"
+
+          # Documentation
+          Copy-Item "stub32\README.md"         "$staging\README.md"
+
+          Write-Host "Staged files:"
+          Get-ChildItem $staging
+
+          Compress-Archive -Path "$staging\*" -DestinationPath "neqsim-windows-x86-python.zip" -Force
+
+      - name: Upload 32-bit artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: compiled-files-windows-x86-python
+          path: neqsim-windows-x86-python.zip
+          overwrite: true
+
+  # ==================================================================
+  #  Default 64-bit native shared libraries (no Python)
+  #  Linux/Windows: -Os optimized   macOS: -Ob (runner RAM limited)
+  # ==================================================================
+  build:
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        include:
           - os: ubuntu-latest
             profile: native-linux-lean
             dynlib_ext: so
@@ -35,33 +266,69 @@ jobs:
             profile: native-macos-lean
             dynlib_ext: dylib
             static_ext: a
-            archlabel: macos-arm64
+            archlabel: macos
 
     runs-on: ${{ matrix.os }}
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: java_graal
+        shell: bash
 
     steps:
       - name: Check out project
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # Default builds still need significant memory on constrained runners.
+      - name: Configure swap (Linux)
+        if: runner.os == 'Linux'
+        uses: pierotofy/set-swap-space@fc79b3f67fa8a838184ce84a674ca12238d2c761 # master
+        with:
+          swap-size-gb: 16
+
+      - name: Configure pagefile (Windows)
+        if: runner.os == 'Windows'
+        uses: al-cheb/configure-pagefile-action@a3b6ebd6b634da88790d9c58d4b37a7f4a7b8708 # v1.4
+        with:
+          minimum-size: 24GB
+          maximum-size: 24GB
+          disk-root: 'D:'
 
       - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
+        uses: graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1 # v1.4.5
         with:
           java-version: '25.0.1'
           distribution: 'graalvm'
-          edition: 'ce'
           components: 'native-image'
           cache: 'maven'
 
-      - name: Print native-image version
-        run: native-image --version
-
-      - name: Build with Maven native-image (default)
+      - name: Compute ARCH_LABEL
+        id: arch
         run: |
-          cd java_graal
-          mvn -B package -P${{ matrix.profile }} --file pom.xml -ntp
-        shell: bash
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            arch="$(echo '${{ runner.arch }}' | tr '[:upper:]' '[:lower:]')"
+            label="macos-${arch}"
+          else
+            label="${{ matrix.archlabel }}"
+          fi
+
+          zip_name="neqsim-${label}.zip"
+
+          echo "ARCH_LABEL=$label" >> "$GITHUB_ENV"
+          echo "ZIP_NAME=$zip_name" >> "$GITHUB_ENV"
+          echo "arch_label=$label" >> "$GITHUB_OUTPUT"
+          echo "zip_name=$zip_name" >> "$GITHUB_OUTPUT"
+
+      - name: Build native-image (no Python)
+        run: mvn -B package -P${{ matrix.profile }} --file pom.xml -ntp
+
+      - name: Strip debug info (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          strip --strip-debug target/neqsim.so || true
+          echo "After strip: $(ls -lh target/neqsim.so)"
 
       - name: Install UPX (Linux)
         if: runner.os == 'Linux'
@@ -72,286 +339,151 @@ jobs:
         shell: pwsh
         run: choco install upx -y
 
-      - name: Compress binary with UPX
+      - name: Compress shared library with UPX
         if: runner.os != 'macOS'
-        shell: bash
         run: |
-          cd java_graal/target
-          echo "Before UPX:"
-          ls -lh neqsim.${{ matrix.dynlib_ext }}
-          upx --best --lzma neqsim.${{ matrix.dynlib_ext }} || echo "UPX compression failed (non-fatal)"
-          echo "After UPX:"
-          ls -lh neqsim.${{ matrix.dynlib_ext }}
-
-      - name: Create staging folder and copy artifacts
-        run: |
-          cd java_graal
-          mkdir staging-${{ matrix.archlabel }}
-          cp target/*.${{ matrix.dynlib_ext }} staging-${{ matrix.archlabel }}/ || true
-          cp target/*.${{ matrix.static_ext }} staging-${{ matrix.archlabel }}/ || true
-          cp target/*.h staging-${{ matrix.archlabel }}/ || true
-        shell: bash
-
-      - name: Zip artifacts on Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Compress-Archive -Path java_graal/staging-${{ matrix.archlabel }}/* `
-                           -DestinationPath java_graal/neqsim-${{ matrix.archlabel }}.zip
-
-      - name: Zip artifacts on Unix/macOS
-        if: runner.os != 'Windows'
-        run: |
-          cd java_graal/staging-${{ matrix.archlabel }}
-          zip -r ../neqsim-${{ matrix.archlabel }}.zip .
-        shell: bash
-
-      - name: Upload zipped artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: compiled-files-${{ matrix.archlabel }}
-          path: java_graal/neqsim-${{ matrix.archlabel }}.zip
-
-  # --- With-Python builds (optional) ---
-  build-python:
-    if: ${{ inputs.include_python }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            profile: native-linux,with-python
-            dynlib_ext: so
-            static_ext: a
-            archlabel: linux-x64-python
-
-          - os: windows-latest
-            profile: native-windows,with-python
-            dynlib_ext: dll
-            static_ext: lib
-            archlabel: windows-x64-python
-
-    runs-on: ${{ matrix.os }}
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    steps:
-      - name: Check out project
-        uses: actions/checkout@v4
-
-      - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '25.0.1'
-          distribution: 'graalvm'
-          edition: 'ce'
-          components: 'native-image'
-          cache: 'maven'
-
-      - name: Print native-image version
-        run: native-image --version
-
-      - name: Install local JARs on Windows
-        if: runner.os == 'Windows'
-        shell: cmd
-        run: |
-          cd java_graal
-          for %%f in (neqsim-*.jar) do (
-            echo Installing %%f
-            for /f "tokens=2 delims=-" %%v in ("%%~nf") do (
-              mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file ^
-                -Dfile="%%f" ^
-                -DgroupId="com.equinor.neqsim" ^
-                -DartifactId="neqsim" ^
-                -Dversion="%%v" ^
-                -Dpackaging="jar"
-            )
-          )
-
-      - name: Install local JARs on Unix
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          cd java_graal
-          for jarfile in neqsim-*.jar; do
-            [[ -e "$jarfile" ]] || continue
-            version=$(echo "$jarfile" | sed -E 's/neqsim-(.*)\.jar/\1/')
-            echo "Installing $jarfile with version $version"
-            mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file \
-              -Dfile="$jarfile" \
-              -DgroupId="com.equinor.neqsim" \
-              -DartifactId="neqsim" \
-              -Dversion="$version" \
-              -Dpackaging="jar"
+          shopt -s nullglob
+          for f in target/neqsim.${{ matrix.dynlib_ext }}; do
+            echo "Before UPX: $(ls -lh "$f")"
+            upx --best --lzma "$f" || echo "UPX compression skipped for $f"
+            echo "After  UPX: $(ls -lh "$f")"
           done
 
-      - name: Build with Maven native-image (with-python)
-        run: |
-          cd java_graal
-          mvn -B package -P${{ matrix.profile }} --file pom.xml -ntp
-        shell: bash
-
-      - name: Install UPX (Linux)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y upx-ucl
-
-      - name: Install UPX (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: choco install upx -y
-
-      - name: Compress binary with UPX
-        shell: bash
-        run: |
-          cd java_graal/target
-          echo "Before UPX:"
-          ls -lh neqsim.${{ matrix.dynlib_ext }}
-          upx --best --lzma neqsim.${{ matrix.dynlib_ext }} || echo "UPX compression failed (non-fatal)"
-          echo "After UPX:"
-          ls -lh neqsim.${{ matrix.dynlib_ext }}
-
       - name: Create staging folder and copy artifacts
         run: |
-          cd java_graal
-          mkdir staging-${{ matrix.archlabel }}
-          cp target/*.${{ matrix.dynlib_ext }} staging-${{ matrix.archlabel }}/ || true
-          cp target/*.${{ matrix.static_ext }} staging-${{ matrix.archlabel }}/ || true
-          cp target/*.h staging-${{ matrix.archlabel }}/ || true
-        shell: bash
+          staging="staging-${ARCH_LABEL}"
+          mkdir -p "$staging"
 
-      - name: Zip artifacts on Windows
-        if: runner.os == 'Windows'
+          shopt -s nullglob
+          for f in target/*.${{ matrix.dynlib_ext }} target/*.${{ matrix.static_ext }} target/*.h; do
+            cp "$f" "$staging/"
+          done
+
+          echo "Staged files:"
+          ls -la "$staging" || true
+
+      - name: Zip artifacts
         shell: pwsh
         run: |
-          Compress-Archive -Path java_graal/staging-${{ matrix.archlabel }}/* `
-                           -DestinationPath java_graal/neqsim-${{ matrix.archlabel }}.zip
-
-      - name: Zip artifacts on Unix
-        if: runner.os != 'Windows'
-        run: |
-          cd java_graal/staging-${{ matrix.archlabel }}
-          zip -r ../neqsim-${{ matrix.archlabel }}.zip .
-        shell: bash
+          $stagingDir = "staging-$($env:ARCH_LABEL)"
+          $zipFile = "$($env:ZIP_NAME)"
+          Compress-Archive -Path "$stagingDir/*" -DestinationPath $zipFile -Force
 
       - name: Upload zipped artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: compiled-files-${{ matrix.archlabel }}
-          path: java_graal/neqsim-${{ matrix.archlabel }}.zip
+          name: compiled-files-${{ steps.arch.outputs.arch_label }}
+          path: java_graal/${{ steps.arch.outputs.zip_name }}
+          overwrite: true
 
-  # --- 32-bit Windows stub build (always included) ---
-  build-x86:
+  # ==================================================================
+  #  Default 32-bit stub DLL + 64-bit server EXE  (Windows, no Python)
+  # ==================================================================
+  build-windows-x86:
+    timeout-minutes: 30
     runs-on: windows-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: read
 
     steps:
       - name: Check out project
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Find vcvarsall.bat
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do set "VSDIR=%%i"
+          echo VCVARS=%VSDIR%\VC\Auxiliary\Build\vcvarsall.bat>> "%GITHUB_ENV%"
 
       - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
+        uses: graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1 # v1.4.5
         with:
           java-version: '25.0.1'
           distribution: 'graalvm'
-          edition: 'ce'
           components: 'native-image'
           cache: 'maven'
 
-      - name: Install local JARs
+      - name: Build 64-bit neqsim_server.exe
         shell: cmd
+        working-directory: java_graal
         run: |
-          cd java_graal
-          for %%f in (neqsim-*.jar) do (
-            echo Installing %%f
-            for /f "tokens=2 delims=-" %%v in ("%%~nf") do (
-              mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file ^
-                -Dfile="%%f" ^
-                -DgroupId="com.equinor.neqsim" ^
-                -DartifactId="neqsim" ^
-                -Dversion="%%v" ^
-                -Dpackaging="jar"
-            )
-          )
-
-      - name: Build 64-bit server EXE
-        shell: bash
-        run: |
-          cd java_graal
-          mvn -B package -Pnative-server-windows --file pom.xml -ntp
-
-      - name: Build 32-bit stub DLL
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
-          cd stub32
-          if not exist dist mkdir dist
-          cl /nologo /W4 /O2 /LD /D NEQSIM_STUB_EXPORTS ^
-             neqsim_stub.c ws2_32.lib ^
-             /Fe:"dist\neqsim.dll" ^
-             /Fo:"dist\neqsim_stub.obj" ^
-             /link /DEF:neqsim_stub.def /IMPLIB:"dist\neqsim.lib"
-
-      - name: Install UPX
-        shell: pwsh
-        run: choco install upx -y
+          call "%VCVARS%" x64
+          call mvnw.cmd -Pnative-server-windows-lean package -DskipTests -ntp
+          if errorlevel 1 exit /b 1
+          echo Server EXE built successfully.
 
       - name: Compress server EXE with UPX
-        shell: bash
-        run: |
-          echo "Before UPX:"
-          ls -lh java_graal/target/neqsim_server.exe
-          upx --best --lzma java_graal/target/neqsim_server.exe || echo "UPX compression failed (non-fatal)"
-          echo "After UPX:"
-          ls -lh java_graal/target/neqsim_server.exe
-
-      - name: Compress stub DLL with UPX
-        shell: bash
-        run: |
-          echo "Before UPX:"
-          ls -lh stub32/dist/neqsim.dll
-          upx --best --lzma stub32/dist/neqsim.dll || echo "UPX compression failed (non-fatal)"
-          echo "After UPX:"
-          ls -lh stub32/dist/neqsim.dll
-
-      - name: Create staging folder and copy artifacts
-        shell: bash
-        run: |
-          mkdir -p staging-windows-x86
-          cp java_graal/target/neqsim_server.exe staging-windows-x86/
-          cp stub32/dist/neqsim.dll staging-windows-x86/
-          cp stub32/dist/neqsim.lib staging-windows-x86/
-          cp stub32/neqsim_stub.h staging-windows-x86/neqsim.h
-          cp stub32/README.md staging-windows-x86/
-
-      - name: Zip x86 artifacts
         shell: pwsh
         run: |
-          Compress-Archive -Path staging-windows-x86/* `
-                           -DestinationPath neqsim-windows-x86.zip
+          choco install upx -y
+          $exe = "java_graal\target\neqsim_server.exe"
+          Write-Host "Before UPX: $((Get-Item $exe).Length / 1MB) MB"
+          upx --best --lzma $exe
+          Write-Host "After  UPX: $((Get-Item $exe).Length / 1MB) MB"
 
-      - name: Upload zipped artifact
-        uses: actions/upload-artifact@v4
+      - name: Build 32-bit neqsim stub DLL
+        shell: cmd
+        run: |
+          call "%VCVARS%" x86
+          cd stub32
+          if not exist dist mkdir dist
+          cl /nologo /W4 /O2 /LD /D NEQSIM_STUB_EXPORTS neqsim_stub.c ws2_32.lib /Fe:dist\neqsim.dll /Fo:dist\neqsim_stub.obj /link /DEF:neqsim_stub.def /IMPLIB:dist\neqsim.lib
+          if errorlevel 1 exit /b 1
+          echo 32-bit stub DLL built successfully.
+
+      - name: Package 32-bit distribution
+        shell: pwsh
+        run: |
+          $staging = "staging-windows-x86"
+          New-Item -ItemType Directory -Force -Path $staging | Out-Null
+          Copy-Item "java_graal\target\neqsim_server.exe" "$staging\"
+          Copy-Item "stub32\dist\neqsim.dll"  "$staging\"
+          Copy-Item "stub32\dist\neqsim.lib"  "$staging\"
+          Copy-Item "stub32\neqsim_stub.h"    "$staging\neqsim.h"
+          Copy-Item "stub32\README.md"         "$staging\README.md"
+          Write-Host "Staged files:"
+          Get-ChildItem $staging
+          Compress-Archive -Path "$staging\*" -DestinationPath "neqsim-windows-x86.zip" -Force
+
+      - name: Upload 32-bit artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: compiled-files-windows-x86
           path: neqsim-windows-x86.zip
+          overwrite: true
 
+  # ==================================================================
+  #  Create Draft Release with all artifacts
+  # ==================================================================
   release:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
-    needs: [build, build-python, build-x86]
-    if: ${{ always() && needs.build.result == 'success' && needs.build-x86.result == 'success' }}
+    needs: [build-python, build-windows-x86-python, build, build-windows-x86]
+    # Run when no job failed/cancelled — skipped Python jobs are OK
+    if: ${{ !cancelled() && !failure() }}
+    permissions:
+      contents: write
+
     steps:
       - name: Download all compiled artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          path: all-artifacts
+          path: release-assets
+          pattern: compiled-files-*
+          merge-multiple: true
 
-      - name: Prepare release assets
+      - name: List release assets
+        run: ls -la release-assets/
+
+      - name: Generate SHA-256 checksums
         run: |
-          mkdir release-assets
-          cp all-artifacts/compiled-files-*/neqsim-*.zip release-assets/
+          cd release-assets
+          sha256sum *.zip > SHA256SUMS.txt
+          echo "--- Checksums ---"
+          cat SHA256SUMS.txt
 
       - name: Create GitHub Draft Release
-        uses: ncipollo/release-action@v1.13.0
+        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: "NeqSim v${{ github.event.inputs.version }}"
@@ -359,4 +491,28 @@ jobs:
           draft: true
           generateReleaseNotes: true
           replacesArtifacts: true
-          artifacts: release-assets/*.zip
+          artifacts: release-assets/*.zip,release-assets/SHA256SUMS.txt
+          body: |
+            ## Release Artifacts
+
+            **Default builds** (always included — no Python, smaller & faster):
+
+            | Archive | Platform | Architecture | Description |
+            |---------|----------|-------------|-------------|
+            | `neqsim-linux-x64.zip` | Linux | x86-64 | Shared library (`.so`) + headers |
+            | `neqsim-windows-x64.zip` | Windows | x86-64 | DLL (`.dll`) + import lib + headers |
+            | `neqsim-macos-*.zip` | macOS | ARM64/x64 | Dynamic library (`.dylib`) + headers |
+            | `neqsim-windows-x86.zip` | Windows | **x86 (32-bit)** | Stub DLL + 64-bit server EXE |
+
+            **With Python builds** (included when *Include Python* was checked at release time):
+
+            | Archive | Platform | Architecture | Description |
+            |---------|----------|-------------|-------------|
+            | `neqsim-linux-x64-python.zip` | Linux | x86-64 | Shared library + Python process models |
+            | `neqsim-windows-x64-python.zip` | Windows | x86-64 | DLL + Python process models |
+            | `neqsim-windows-x86-python.zip` | Windows | **x86 (32-bit)** | Stub DLL + server + Python |
+
+            > **Note:** macOS with-Python builds are not produced on CI due to runner memory limits. Build locally with `mvn -Pnative-macos,with-python package` on a machine with ≥16 GB RAM.
+
+            ### 32-bit Windows package
+            The `neqsim-windows-x86.zip` / `neqsim-windows-x86-python.zip` contains a **32-bit stub DLL** (`neqsim.dll`) and a **64-bit server** (`neqsim_server.exe`). The stub DLL exposes the same API as the native 64-bit DLL but forwards calls over a local TCP connection to the server process. Place both files in the same directory; the DLL auto-launches the server on first use. See the included `README.md` for details.
