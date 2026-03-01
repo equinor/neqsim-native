@@ -14,7 +14,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <graalvm.svm.version>25.0.1</graalvm.svm.version>
+        <graalvm.svm.version>25.0.2</graalvm.svm.version>
         <graalvm.polyglot.version>25.0.1</graalvm.polyglot.version>
         <graalvm.buildtools.version>0.11.3</graalvm.buildtools.version>
         <!-- Default: skip long-running simulation tests. Override with -Dsurefire.excludedGroups= -->
