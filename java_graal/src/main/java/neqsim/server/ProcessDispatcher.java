@@ -27,7 +27,7 @@ public class ProcessDispatcher {
     public static int runCalcWaterDewPoint(double pressure, double ppmWater, double[] out) {
         synchronized (WATER_DEW_LOCK) {
             try {
-                double result = WaterDewPoint.calcWaterDewPoint(null, pressure, ppmWater);
+                double result = WaterDewPoint.calcWaterDewPoint(pressure, ppmWater);
                 if (Double.isNaN(result)) {
                     out[0] = -999.0;
                     return 0;
@@ -54,7 +54,7 @@ public class ProcessDispatcher {
     public static int runCalcWaterInGas(double pressure, double temperature, double[] out) {
         synchronized (WATER_GAS_LOCK) {
             try {
-                double result = WaterDewPoint.calcWaterInGas(null, pressure, temperature);
+                double result = WaterDewPoint.calcWaterInGas(pressure, temperature);
                 if (Double.isNaN(result)) {
                     out[0] = -999.0;
                     return 0;

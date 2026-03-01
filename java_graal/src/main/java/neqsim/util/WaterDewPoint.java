@@ -8,17 +8,18 @@ import org.graalvm.nativeimage.IsolateThread;
 
 public class WaterDewPoint {
 
+    // ----------------------------------------------------------------
+    //  Public API (callable from JVM code without native pointers)
+    // ----------------------------------------------------------------
+
     /**
      * Calculates the water dew point temperature for a given pressure and water content (ppm).
-     * This method is exposed as a C entry point for native access via GraalVM.
      *
-     * @param thread    GraalVM isolate thread (required for native entry points)
      * @param pressure  The system pressure in bar
      * @param ppmWater  Water content in parts per million (ppm)
      * @return          Calculated dew point temperature in degrees Celsius
      */
-    @CEntryPoint(name = "calcWaterDewPoint")
-    public static double calcWaterDewPoint(IsolateThread thread, double pressure, double ppmWater) {
+    public static double calcWaterDewPoint(double pressure, double ppmWater) {
         try {
             // Create a new thermodynamic system
             SystemInterface testSystem = new SystemSrkCPAstatoil(260.15, pressure);
@@ -50,17 +51,31 @@ public class WaterDewPoint {
         }
     }
 
+    // ----------------------------------------------------------------
+    //  C Entry Points (exported in the native shared library)
+    // ----------------------------------------------------------------
+
+    /**
+     * Native entry point for the water dew point calculation.
+     *
+     * @param thread    GraalVM isolate thread (required for native entry points)
+     * @param pressure  The system pressure in bar
+     * @param ppmWater  Water content in parts per million (ppm)
+     * @return          Calculated dew point temperature in degrees Celsius
+     */
+    @CEntryPoint(name = "calcWaterDewPoint")
+    public static double calcWaterDewPointNative(IsolateThread thread, double pressure, double ppmWater) {
+        return calcWaterDewPoint(pressure, ppmWater);
+    }
+
     /**
      * Calculates the water content in gas at a given pressure and temperature.
-     * This method is exposed as a C entry point for native access via GraalVM.
      *
-     * @param thread      GraalVM isolate thread (required for native entry points)
      * @param pressure    The system pressure in bar
      * @param temperature The system temperature in degrees Celsius
      * @return            Water content in gas phase in parts per million (ppm)
      */
-    @CEntryPoint(name = "calcWaterInGas")
-    public static double calcWaterInGas(IsolateThread thread, double pressure, double temperature) {
+    public static double calcWaterInGas(double pressure, double temperature) {
         try {
             // Create a new thermodynamic system
             double ppmWater = 100.0;
@@ -89,6 +104,19 @@ public class WaterDewPoint {
             e.printStackTrace();
             return Double.NaN; // Return NaN if an error occurs
         }
+    }
+
+    /**
+     * Native entry point for the water-in-gas calculation.
+     *
+     * @param thread      GraalVM isolate thread (required for native entry points)
+     * @param pressure    The system pressure in bar
+     * @param temperature The system temperature in degrees Celsius
+     * @return            Water content in gas phase in parts per million (ppm)
+     */
+    @CEntryPoint(name = "calcWaterInGas")
+    public static double calcWaterInGasNative(IsolateThread thread, double pressure, double temperature) {
+        return calcWaterInGas(pressure, temperature);
     }
 
     /**

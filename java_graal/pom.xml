@@ -11,10 +11,10 @@
     <packaging>jar</packaging>
 
     <properties>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <graalvm.svm.version>25.0.0</graalvm.svm.version>
+        <graalvm.svm.version>23.1.2</graalvm.svm.version>
         <graalvm.buildtools.version>0.10.6</graalvm.buildtools.version>
     </properties>
 
