@@ -91,4 +91,4 @@ jobs:
         shell: bash
         run: |
           cd java_graal
-          ./mvnw -B package -Pnative-linux --file pom.xml -ntp
+          ./mvnw -B package -Pnative-linux-lean --file pom.xml -ntp

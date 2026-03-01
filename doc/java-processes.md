@@ -250,7 +250,7 @@ cd java_graal
 mvnw.cmd -B test --file pom.xml -ntp
 
 # Build the shared library (Windows example)
-mvnw.cmd -Pnative-windows package
+mvnw.cmd -Pnative-windows-lean package
 
 # Check that the symbol is exported
 dumpbin /exports target/neqsim.dll | findstr SEP_
@@ -258,7 +258,7 @@ dumpbin /exports target/neqsim.dll | findstr SEP_
 
 On Linux:
 ```bash
-./mvnw -Pnative-linux package
+./mvnw -Pnative-linux-lean package
 nm -D target/neqsim.so | grep SEP_
 ```
 

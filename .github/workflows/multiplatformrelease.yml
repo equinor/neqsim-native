@@ -20,19 +20,19 @@ jobs:
         include:
           # --- Default builds (always) ---
           - os: ubuntu-latest
-            profile: native-linux
+            profile: native-linux-lean
             dynlib_ext: so
             static_ext: a
             archlabel: linux-x64
 
           - os: windows-latest
-            profile: native-windows
+            profile: native-windows-lean
             dynlib_ext: dll
             static_ext: lib
             archlabel: windows-x64
 
           - os: macos-latest
-            profile: native-macos
+            profile: native-macos-lean
             dynlib_ext: dylib
             static_ext: a
             archlabel: macos-arm64

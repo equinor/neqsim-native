@@ -57,6 +57,14 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <excludedGroups>integration</excludedGroups>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
@@ -88,9 +96,15 @@
             </dependencies>
         </profile>
 
+        <!-- ============================================================
+             Default "lean" builds (no Python — recommended)
+             Activate explicitly:
+               ./mvnw -Pnative-linux-lean package
+               mvnw.cmd -Pnative-windows-lean package
+               ./mvnw -Pnative-macos-lean package
+             ============================================================ -->
         <profile>
-            <id>native-linux</id>
-            <activation><os><name>Linux</name></os></activation>
+            <id>native-linux-lean</id>
             <build>
                 <plugins>
                     <plugin>
@@ -99,7 +113,123 @@
                         <version>${graalvm.buildtools.version}</version>
                         <extensions>true</extensions>
                         <executions>
-                            <!-- Shared library -->
+                            <execution>
+                                <id>build-shared-lib-linux-lean</id>
+                                <goals><goal>compile-no-fork</goal></goals>
+                                <configuration>
+                                    <excludeTestClasses>true</excludeTestClasses>
+                                    <agent>
+                                        <enabled>false</enabled>
+                                    </agent>
+                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
+                                    <sharedLibrary>true</sharedLibrary>
+                                    <imageName>neqsim</imageName>
+                                    <debugSymbols>true</debugSymbols>
+                                    <debug>true</debug>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-g</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                        <buildArg>-H:+TrackPrimitiveValues</buildArg>
+                                        <buildArg>-H:+UsePredicates</buildArg>
+                                    </buildArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>native-macos-lean</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${graalvm.buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-shared-lib-macos-lean</id>
+                                <goals><goal>compile-no-fork</goal></goals>
+                                <configuration>
+                                    <excludeTestClasses>true</excludeTestClasses>
+                                    <agent>
+                                        <enabled>false</enabled>
+                                    </agent>
+                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
+                                    <sharedLibrary>true</sharedLibrary>
+                                    <imageName>neqsim</imageName>
+                                    <debugSymbols>true</debugSymbols>
+                                    <debug>true</debug>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-g</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                    </buildArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>native-windows-lean</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${graalvm.buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-shared-lib-windows-lean</id>
+                                <goals><goal>compile-no-fork</goal></goals>
+                                <configuration>
+                                    <excludeTestClasses>true</excludeTestClasses>
+                                    <agent>
+                                        <enabled>false</enabled>
+                                    </agent>
+                                    <mainClass>neqsim.util.WaterDewPoint</mainClass>
+                                    <sharedLibrary>true</sharedLibrary>
+                                    <imageName>neqsim</imageName>
+                                    <debugSymbols>true</debugSymbols>
+                                    <debug>true</debug>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-g</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                    </buildArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- ============================================================
+             With-Python builds (use alongside with-python profile)
+             Activate explicitly:
+               ./mvnw -Pnative-linux,with-python package
+               mvnw.cmd -Pnative-windows,with-python package
+               ./mvnw -Pnative-macos,with-python package
+             ============================================================ -->
+        <profile>
+            <id>native-linux</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${graalvm.buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
                             <execution>
                                 <id>build-shared-lib-linux</id>
                                 <goals><goal>compile-no-fork</goal></goals>
@@ -130,7 +260,6 @@
 
         <profile>
             <id>native-macos</id>
-            <activation><os><name>Mac OS X</name></os></activation>
             <build>
                 <plugins>
                     <plugin>
@@ -167,7 +296,6 @@
 
         <profile>
             <id>native-windows</id>
-            <activation><os><name>Windows</name></os></activation>
             <build>
                 <plugins>
                     <plugin>

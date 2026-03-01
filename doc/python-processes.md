@@ -287,9 +287,9 @@ The Maven build compiles everything into a single shared library. Python models 
 
 ```bash
 # Default builds (no Python — recommended for most users):
-./mvnw -Pnative-linux package                    # Linux
-mvnw.cmd -Pnative-windows package                # Windows
-./mvnw -Pnative-macos package                    # macOS
+./mvnw -Pnative-linux-lean package               # Linux
+mvnw.cmd -Pnative-windows-lean package           # Windows
+./mvnw -Pnative-macos-lean package               # macOS
 
 # With Python support (required for Python models):
 ./mvnw -Pnative-linux,with-python package        # Linux

@@ -146,9 +146,9 @@ Ensure [GraalVM JDK 25+](https://www.graalvm.org/) is installed and `JAVA_HOME` 
 cd java_graal
 
 # Default builds (no Python — recommended):
-./mvnw -Pnative-linux package                    # Linux
-mvnw.cmd -Pnative-windows package                # Windows
-./mvnw -Pnative-macos package                    # macOS
+./mvnw -Pnative-linux-lean package               # Linux
+mvnw.cmd -Pnative-windows-lean package           # Windows
+./mvnw -Pnative-macos-lean package               # macOS
 
 # With Python support (optional, larger and slower to build):
 ./mvnw -Pnative-linux,with-python package        # Linux

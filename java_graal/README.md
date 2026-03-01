@@ -19,9 +19,9 @@ To compile the project to native code (on Windows use mvnw.cmd):
 
 ### Default builds (no Python — recommended)
 ```bash
-./mvnw -Pnative-linux package                    # Linux
-mvnw.cmd -Pnative-windows package                # Windows
-./mvnw -Pnative-macos package                    # macOS
+./mvnw -Pnative-linux-lean package               # Linux
+mvnw.cmd -Pnative-windows-lean package           # Windows
+./mvnw -Pnative-macos-lean package               # macOS
 ```
 
 ### With Python support (optional, larger and slower)
@@ -31,10 +31,10 @@ mvnw.cmd -Pnative-windows,with-python package    # Windows
 ./mvnw -Pnative-macos,with-python package        # macOS
 ```
 
-| Variant | Profiles | Build time | Python models |
-|---------|----------|------------|---------------|
-| **Default** | `native-<os>` | ~2 min | No (`PY_*` return `quality=0`) |
-| **With Python** | `native-<os>,with-python` | ~40 min | Yes (`PY_*` functions work) |
+| Variant | Profiles | Size | Build time | Python models |
+|---------|----------|------|------------|---------------|
+| **Default** | `native-<os>-lean` | ~100 MB | ~2 min | No (`PY_*` return `quality=0`) |
+| **With Python** | `native-<os>,with-python` | ~330 MB | ~40 min | Yes (`PY_*` functions work) |
 
 A shared library is created by activating this in the `pom.xml` file:
 
