@@ -3,16 +3,16 @@ name: Run Java Tests
 on:
   workflow_dispatch:  
   push:
-    branches: # Only run for changes in master branch and any releases branch
-      - master
+    branches:
+      - main
       - 'releases/**'
   pull_request:
     branches: 
-      - master
+      - main
 
 jobs:
   run_test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     env:
       GITHUB_USERNAME: ${{ secrets.USERNAME }}
       GITHUB_TOKEN: ${{ secrets.TOKEN }}
@@ -28,8 +28,67 @@ jobs:
           java-version: '21'
           cache: 'maven'
             
-      - name: Assert tests with Java 21 on Windows
-        shell: cmd
+      - name: Install local JARs
+        shell: bash
+        run: |
+          cd java_graal
+          for jarfile in neqsim-*.jar; do
+            [[ -e "$jarfile" ]] || continue
+            version=$(echo "$jarfile" | sed -E 's/neqsim-(.*)\.jar/\1/')
+            echo "Installing $jarfile with version $version"
+            mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file \
+              -Dfile="$jarfile" \
+              -DgroupId="com.equinor.neqsim" \
+              -DartifactId="neqsim" \
+              -Dversion="$version" \
+              -Dpackaging="jar"
+          done
+
+      - name: Run unit tests with Temurin JDK
+        shell: bash
         run: |
           cd java_graal
           ./mvnw -B test --file pom.xml -ntp
+
+  verify_native_image:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25.0.1'
+          distribution: 'graalvm'
+          edition: 'ce'
+          components: 'native-image'
+          cache: 'maven'
+
+      - name: Print native-image version
+        run: native-image --version
+
+      - name: Install local JARs
+        shell: bash
+        run: |
+          cd java_graal
+          for jarfile in neqsim-*.jar; do
+            [[ -e "$jarfile" ]] || continue
+            version=$(echo "$jarfile" | sed -E 's/neqsim-(.*)\.jar/\1/')
+            echo "Installing $jarfile with version $version"
+            mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file \
+              -Dfile="$jarfile" \
+              -DgroupId="com.equinor.neqsim" \
+              -DartifactId="neqsim" \
+              -Dversion="$version" \
+              -Dpackaging="jar"
+          done
+
+      - name: Verify native-image compilation
+        shell: bash
+        run: |
+          cd java_graal
+          ./mvnw -B package -Pnative-linux --file pom.xml -ntp

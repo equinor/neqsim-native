@@ -24,6 +24,19 @@
             <artifactId>neqsim</artifactId>
             <version>3.0.26</version>
         </dependency>
+        <!-- GraalVM Substrate VM (provides @CEntryPoint, CDoublePointer, etc.) -->
+        <dependency>
+            <groupId>org.graalvm.sdk</groupId>
+            <artifactId>graal-sdk</artifactId>
+            <version>${graalvm.svm.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Polyglot API (Context, Source, Value — used by PythonProcessRunner) -->
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>polyglot</artifactId>
+            <version>${graalvm.svm.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -58,6 +71,23 @@
         </plugins>
     </build>
     <profiles>
+        <!-- ============================================================
+             with-python: Adds GraalPy runtime for Python process models.
+             Activate alongside a native-* profile, e.g.:
+               ./mvnw -Pnative-linux,with-python package
+             ============================================================ -->
+        <profile>
+            <id>with-python</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.graalvm.polyglot</groupId>
+                    <artifactId>python-community</artifactId>
+                    <version>${graalvm.svm.version}</version>
+                    <type>pom</type>
+                </dependency>
+            </dependencies>
+        </profile>
+
         <profile>
             <id>native-linux</id>
             <activation><os><name>Linux</name></os></activation>

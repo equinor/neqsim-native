@@ -3,5 +3,40 @@
     "name": "neqsim.thermo.system.SystemPrEos1978",
     "allPublicConstructors": true,
     "allPublicMethods": true
+  },
+  {
+    "name": "neqsim.thermo.system.SystemSrkEos",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "neqsim.thermo.system.SystemThermo",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "neqsim.thermodynamicoperations.ThermodynamicOperations",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "neqsim.thermo.phase.PhasePrEos",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "neqsim.thermo.phase.PhaseSrkEos",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "neqsim.thermo.phase.PhaseEos",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "neqsim.thermo.phase.Phase",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
   }
 ]
