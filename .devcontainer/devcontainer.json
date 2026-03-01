@@ -23,6 +23,12 @@
     }
   },
 
+  // Environment variables available in every terminal session.
+  // NEQSIM_TARGET points to the directory containing neqsim.so and headers after a native build.
+  "containerEnv": {
+    "NEQSIM_TARGET": "${containerWorkspaceFolder}/java_graal/target"
+  },
+
   // Verify that GraalVM and native-image are installed, then run unit tests.
   "postCreateCommand": "java -version && native-image --version && cd java_graal && ./mvnw verify -ntp",
 

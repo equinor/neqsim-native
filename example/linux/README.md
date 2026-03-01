@@ -1,6 +1,23 @@
 # How to Compile
 
-All examples link against the `neqsim.so` shared library built from the `java_graal/` directory. Adjust the paths below to match your checkout location.
+All examples link against the `neqsim.so` shared library built from the `java_graal/` directory.
+
+## Quick Start (Codespaces / Dev Container)
+
+Inside a Codespace or Dev Container, everything is pre-configured. Run the all-in-one script to build the native library, compile the examples, and run them:
+
+```bash
+cd example/linux
+chmod +x build_and_run.sh
+./build_and_run.sh                # default build (Java models only)
+./build_and_run.sh --with-python  # include Python models
+```
+
+The devcontainer sets `NEQSIM_TARGET` automatically, pointing to `java_graal/target`.
+
+## Manual Build
+
+Adjust the paths below to match your checkout location.
 
 ```bash
 # Set this to your neqsim-native checkout root

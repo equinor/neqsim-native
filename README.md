@@ -131,6 +131,17 @@ cd java_graal
 ./mvnw -Pnative-linux,with-python package   # with Python support
 ```
 
+**To build and run the C++ examples** (builds the native library, compiles the examples, and runs them):
+
+```bash
+cd example/linux
+chmod +x build_and_run.sh
+./build_and_run.sh                # default build
+./build_and_run.sh --with-python  # include Python models
+```
+
+The devcontainer sets the `NEQSIM_TARGET` environment variable automatically, pointing to `java_graal/target`. You can also compile examples manually using `g++` — see [example/linux/README.md](example/linux/README.md) for details.
+
 ## Installation
 
 ### 1. Clone the Repository
