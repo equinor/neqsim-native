@@ -11,6 +11,8 @@ Learn and ask questions in [Discussions for use and development of NeqSim](https
 2. Review the [GraalVM Getting Started Guide](https://www.graalvm.org/latest/docs/getting-started/)
 3. Review [native compilation documentation](https://www.graalvm.org/latest/reference-manual/native-image/) with GraalVM
 
+> **Codespaces users:** When creating a GitHub Codespace, select a machine type with **at least 16 GB of RAM** (e.g. 4-core / 16 GB). The default 2-core machine (~6 GB RAM) is not enough for native-image compilation and will be killed by the OS (exit code 143).
+
 The project is built into native code (e.g., shared libraries or executables) using the Maven build system. All dependencies are specified in the `pom.xml` file and resolved from Maven Central.
 
 ## Commands
