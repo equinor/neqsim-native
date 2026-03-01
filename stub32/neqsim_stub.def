@@ -1,0 +1,8 @@
+LIBRARY neqsim
+EXPORTS
+    graal_create_isolate
+    graal_detach_thread
+    graal_tear_down_isolate
+    calcWaterDewPoint
+    calcWaterInGas
+    PY_run_dewpoint_calculation

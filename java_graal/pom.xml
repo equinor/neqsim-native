@@ -329,5 +329,46 @@
                 </plugins>
             </build>
         </profile>
+
+        <!-- ============================================================
+             Server EXE build (for 32-bit stub support — Windows only)
+             Builds a standalone executable (not a shared library) that
+             hosts the NeqSim process models behind a TCP server.
+             Activate explicitly:
+               mvnw.cmd -Pnative-server-windows package
+               mvnw.cmd -Pnative-server-windows,with-python package
+             ============================================================ -->
+        <profile>
+            <id>native-server-windows</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${graalvm.buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-server-exe-windows</id>
+                                <goals><goal>compile-no-fork</goal></goals>
+                                <configuration>
+                                    <excludeTestClasses>true</excludeTestClasses>
+                                    <agent>
+                                        <enabled>false</enabled>
+                                    </agent>
+                                    <mainClass>neqsim.server.NeqSimPipeServer</mainClass>
+                                    <sharedLibrary>false</sharedLibrary>
+                                    <imageName>neqsim_server</imageName>
+                                    <buildArgs>
+                                        <buildArg>--no-fallback</buildArg>
+                                        <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                    </buildArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>

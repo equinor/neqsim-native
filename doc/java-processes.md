@@ -342,6 +342,16 @@ int main() {
 | `java_graal/src/main/resources/META-INF/native-image/reflect-config.json` | Reflection entries for neqsim classes used by the model |
 | `doc/README.md` | API parameter docs |
 
+### Files to update only if 32-bit support is needed
+
+| File | What to add |
+|---|---|
+| `stub32/neqsim_stub.h` | Function declaration with `NEQSIM_API` |
+| `stub32/neqsim_stub.c` | `#define FUNC_...` + RPC forwarding function |
+| `stub32/neqsim_stub.def` | Export name |
+| `java_graal/.../NeqSimPipeServer.java` | `case` in dispatch + handler method |
+| `java_graal/.../ProcessDispatcher.java` | Forwarding method |
+
 ---
 
 ## Existing Java Models — Reference

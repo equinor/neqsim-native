@@ -47,11 +47,34 @@ The **default** release includes Java process models only (no Python). Python (G
 | Linux x86-64 | `neqsim-linux-x64-python.zip` |
 | Windows x86-64 | `neqsim-windows-x64-python.zip` |
 
+### 32-bit Windows — always included
+
+| Platform | Archive |
+|---|---|
+| Windows x86 (32-bit) | `neqsim-windows-x86.zip` |
+
+The 32-bit package contains a thin stub DLL that forwards calls over TCP to a 64-bit server EXE. See [stub32/README.md](stub32/README.md) for details.
+
+### Binary size optimization
+
+Release binaries are compressed with [UPX](https://upx.github.io/) (`--best --lzma`) to reduce download size by ~50%. This is applied automatically by the CI workflow to:
+- 64-bit shared libraries (Linux `.so`, Windows `.dll`)
+
+macOS `.dylib` files are **not** compressed — UPX does not support Mach-O shared libraries.
+
+The compressed binaries decompress transparently at load time; no extra steps are needed by the user.
+
 ## Use in Visual Studio
 
 See the [example](example/) folder for sample C++ projects. Needed files:
 
 ![Files for compilation](images/files.png)
+
+## 32-bit Windows Support
+
+For 32-bit applications, a special package is available. It contains a thin 32-bit stub DLL that forwards calls over TCP to a 64-bit server process. The API is **identical** to the native 64-bit DLL — no code changes required.
+
+See [stub32/README.md](stub32/README.md) for full documentation, usage examples, and build instructions.
 
 ## Documentation
 
@@ -130,8 +153,8 @@ Releases are created via the **"Multi Platform Release"** workflow in GitHub Act
 
 | Include Python? | Artifacts produced | Approx. time |
 |:---:|---|---|
-| ☐ Unchecked | 3 default zips (Linux, Windows, macOS) | ~10 min |
-| ☑ Checked | 3 default + 2 with-python zips (Linux + Windows) | ~50 min |
+| ☐ Unchecked | 3 default zips (Linux, Windows, macOS) + 1 x86 zip (Windows 32-bit) | ~15 min |
+| ☑ Checked | 3 default + 2 with-python + 1 x86 zips | ~55 min |
 
 ### When to include Python
 
@@ -183,6 +206,7 @@ For a complete step-by-step guide with full code examples, see **[doc/java-proce
 - [ ] **Add unit tests** in `java_graal/src/test/java/neqsim/process/<name>/`
 - [ ] **Update `reflect-config.json`** if your model uses reflection-based class loading
 - [ ] **doc/README.md** — API parameter table
+- [ ] *(Optional)* **32-bit stub support** — see [stub32/README.md](stub32/README.md) and update `neqsim_stub.h`, `neqsim_stub.c`, `neqsim_stub.def`, `NeqSimPipeServer.java`, `ProcessDispatcher.java`
 
 ### Adding a Python Process Model
 
@@ -196,6 +220,7 @@ See **[doc/python-processes.md](doc/python-processes.md)** for a complete step-b
 - [ ] **Java wrapper** in `java_graal/src/main/java/neqsim/process/python/Python<Name>.java`
 - [ ] **Unit test** in `java_graal/src/test/java/neqsim/process/python/`
 - [ ] **doc/README.md** — API parameter table
+- [ ] *(Optional)* **32-bit stub support** — see [stub32/README.md](stub32/README.md)
 
 ## Using the DLL from C/C++
 
@@ -230,6 +255,7 @@ neqsim-native/
 │   ├── src/
 │   │   ├── main/java/neqsim/
 │   │   │   ├── process/     # Process models (Java + Python wrappers)
+│   │   │   ├── server/      # IPC server for 32-bit stub
 │   │   │   └── util/        # Utility classes
 │   │   ├── main/resources/
 │   │   │   ├── python/      # Python process models (GraalPy)
@@ -237,11 +263,18 @@ neqsim-native/
 │   │   └── test/            # Unit tests
 │   ├── pom.xml              # Maven configuration (dependencies + native profiles)
 │   └── README.md            # Build documentation
+├── stub32/                  # 32-bit stub DLL + server (for 32-bit applications)
+│   ├── neqsim_stub.c        # Stub DLL source (TCP forwarder)
+│   ├── neqsim_stub.h        # Public API header (drop-in for neqsim.h)
+│   ├── neqsim_stub.def      # DLL export definitions
+│   ├── build.bat            # Build script
+│   └── README.md            # 32-bit architecture documentation
 ├── example/                 # C/C++ usage examples (windows + linux)
 ├── doc/                     # API parameter documentation + guides
 │   ├── README.md            # Function-level API docs (inputs/outputs)
 │   ├── java-processes.md    # Step-by-step guide for Java models
 │   └── python-processes.md  # Step-by-step guide for Python models
+├── .github/workflows/       # CI/CD workflows
 └── README.md                # This file
 ```
 

@@ -31,10 +31,20 @@ mvnw.cmd -Pnative-windows,with-python package    # Windows
 ./mvnw -Pnative-macos,with-python package        # macOS
 ```
 
+### 32-bit server EXE (for 32-bit stub support — Windows only)
+```bash
+mvnw.cmd -Pnative-server-windows package         # builds neqsim_server.exe
+```
+
+> The server EXE is used together with the 32-bit stub DLL in `stub32/`.
+> See [stub32/README.md](../stub32/README.md) for details.
+
 | Variant | Profiles | Size | Build time | Python models |
 |---------|----------|------|------------|---------------|
 | **Default** | `native-<os>-lean` | ~100 MB | ~2 min | No (`PY_*` return `quality=0`) |
 | **With Python** | `native-<os>,with-python` | ~330 MB | ~40 min | Yes (`PY_*` functions work) |
+
+> **Note:** Sizes above are before compression. CI release builds are compressed with [UPX](https://upx.github.io/) (`--best --lzma`), reducing Linux/Windows binaries by ~50%. macOS builds are not compressed (UPX does not support `.dylib`). To compress a local build: `upx --best --lzma target/neqsim.dll` (or `.so`).
 
 A shared library is created by activating this in the `pom.xml` file:
 

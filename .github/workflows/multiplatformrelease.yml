@@ -97,6 +97,26 @@ jobs:
           mvn -B package -P${{ matrix.profile }} --file pom.xml -ntp
         shell: bash
 
+      - name: Install UPX (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y upx-ucl
+
+      - name: Install UPX (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install upx -y
+
+      - name: Compress binary with UPX
+        if: runner.os != 'macOS'
+        shell: bash
+        run: |
+          cd java_graal/target
+          echo "Before UPX:"
+          ls -lh neqsim.${{ matrix.dynlib_ext }}
+          upx --best --lzma neqsim.${{ matrix.dynlib_ext }} || echo "UPX compression failed (non-fatal)"
+          echo "After UPX:"
+          ls -lh neqsim.${{ matrix.dynlib_ext }}
+
       - name: Create staging folder and copy artifacts
         run: |
           cd java_graal
@@ -204,6 +224,25 @@ jobs:
           mvn -B package -P${{ matrix.profile }} --file pom.xml -ntp
         shell: bash
 
+      - name: Install UPX (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y upx-ucl
+
+      - name: Install UPX (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install upx -y
+
+      - name: Compress binary with UPX
+        shell: bash
+        run: |
+          cd java_graal/target
+          echo "Before UPX:"
+          ls -lh neqsim.${{ matrix.dynlib_ext }}
+          upx --best --lzma neqsim.${{ matrix.dynlib_ext }} || echo "UPX compression failed (non-fatal)"
+          echo "After UPX:"
+          ls -lh neqsim.${{ matrix.dynlib_ext }}
+
       - name: Create staging folder and copy artifacts
         run: |
           cd java_graal
@@ -233,10 +272,85 @@ jobs:
           name: compiled-files-${{ matrix.archlabel }}
           path: java_graal/neqsim-${{ matrix.archlabel }}.zip
 
+  # --- 32-bit Windows stub build (always included) ---
+  build-x86:
+    runs-on: windows-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25.0.1'
+          distribution: 'graalvm'
+          edition: 'ce'
+          components: 'native-image'
+          cache: 'maven'
+
+      - name: Install local JARs
+        shell: cmd
+        run: |
+          cd java_graal
+          for %%f in (neqsim-*.jar) do (
+            echo Installing %%f
+            for /f "tokens=2 delims=-" %%v in ("%%~nf") do (
+              mvn org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file ^
+                -Dfile="%%f" ^
+                -DgroupId="com.equinor.neqsim" ^
+                -DartifactId="neqsim" ^
+                -Dversion="%%v" ^
+                -Dpackaging="jar"
+            )
+          )
+
+      - name: Build 64-bit server EXE
+        shell: bash
+        run: |
+          cd java_graal
+          mvn -B package -Pnative-server-windows --file pom.xml -ntp
+
+      - name: Build 32-bit stub DLL
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
+          cd stub32
+          if not exist dist mkdir dist
+          cl /nologo /W4 /O2 /LD /D NEQSIM_STUB_EXPORTS ^
+             neqsim_stub.c ws2_32.lib ^
+             /Fe:"dist\neqsim.dll" ^
+             /Fo:"dist\neqsim_stub.obj" ^
+             /link /DEF:neqsim_stub.def /IMPLIB:"dist\neqsim.lib"
+
+      - name: Create staging folder and copy artifacts
+        shell: bash
+        run: |
+          mkdir -p staging-windows-x86
+          cp java_graal/target/neqsim_server.exe staging-windows-x86/
+          cp stub32/dist/neqsim.dll staging-windows-x86/
+          cp stub32/dist/neqsim.lib staging-windows-x86/
+          cp stub32/neqsim_stub.h staging-windows-x86/neqsim.h
+          cp stub32/README.md staging-windows-x86/
+
+      - name: Zip x86 artifacts
+        shell: pwsh
+        run: |
+          Compress-Archive -Path staging-windows-x86/* `
+                           -DestinationPath neqsim-windows-x86.zip
+
+      - name: Upload zipped artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-files-windows-x86
+          path: neqsim-windows-x86.zip
+
   release:
     runs-on: ubuntu-latest
-    needs: [build, build-python]
-    if: ${{ always() && needs.build.result == 'success' }}
+    needs: [build, build-python, build-x86]
+    if: ${{ always() && needs.build.result == 'success' && needs.build-x86.result == 'success' }}
     steps:
       - name: Download all compiled artifacts
         uses: actions/download-artifact@v4

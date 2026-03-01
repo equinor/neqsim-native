@@ -375,6 +375,16 @@ graal_tear_down_isolate(thread);
 | `java_graal/src/main/java/neqsim/process/python/PythonProcessRunner.java` | Shared utility — loads scripts, creates GraalPy context, calls functions |
 | `java_graal/pom.xml` | Already has `polyglot` and `python` dependencies |
 
+### Files to update only if 32-bit support is needed
+
+| File | What to add |
+|---|---|
+| `stub32/neqsim_stub.h` | Function declaration with `NEQSIM_API` |
+| `stub32/neqsim_stub.c` | `#define FUNC_...` + RPC forwarding function |
+| `stub32/neqsim_stub.def` | Export name |
+| `java_graal/.../NeqSimPipeServer.java` | Function ID constant + `case` + handler method |
+| `java_graal/.../ProcessDispatcher.java` | Lock object + forwarding method |
+
 ## Tips and Troubleshooting
 
 ### Reflection configuration
