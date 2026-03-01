@@ -4,6 +4,14 @@
     "dockerfile": "Dockerfile"
   },
 
+  // GraalVM native-image compilation requires significant memory.
+  // The default 2-core machine (~6 GB) will OOM during the analysis phase.
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb",
+    "storage": "32gb"
+  },
+
   // GraalVM 25 includes native-image out of the box.
   // Maven is provided by the wrapper (mvnw) in java_graal/.
   "features": {

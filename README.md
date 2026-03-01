@@ -114,7 +114,7 @@ The easiest way to get started is to open the repository in a **GitHub Codespace
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&repo=equinor/neqsim-native)
 
-> **Important:** When creating a Codespace, select a machine type with **at least 16 GB of RAM** (e.g. 4-core / 16 GB). The default 2-core machine has only ~6 GB of RAM, which is not enough for GraalVM native-image compilation — the build will be killed by the OS (exit code 143) during the analysis phase.
+> **Important:** The devcontainer is configured to require a machine with **at least 16 GB of RAM** (4-core). GitHub Codespaces will automatically select a qualifying machine type. The default 2-core machine (~6 GB RAM) is not enough for GraalVM native-image compilation — the build will be killed by the OS (exit code 143) during the analysis phase.
 
 **To open locally in VS Code:**
 
