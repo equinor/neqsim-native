@@ -325,6 +325,28 @@ jobs:
              /Fo:"dist\neqsim_stub.obj" ^
              /link /DEF:neqsim_stub.def /IMPLIB:"dist\neqsim.lib"
 
+      - name: Install UPX
+        shell: pwsh
+        run: choco install upx -y
+
+      - name: Compress server EXE with UPX
+        shell: bash
+        run: |
+          echo "Before UPX:"
+          ls -lh java_graal/target/neqsim_server.exe
+          upx --best --lzma java_graal/target/neqsim_server.exe || echo "UPX compression failed (non-fatal)"
+          echo "After UPX:"
+          ls -lh java_graal/target/neqsim_server.exe
+
+      - name: Compress stub DLL with UPX
+        shell: bash
+        run: |
+          echo "Before UPX:"
+          ls -lh stub32/dist/neqsim.dll
+          upx --best --lzma stub32/dist/neqsim.dll || echo "UPX compression failed (non-fatal)"
+          echo "After UPX:"
+          ls -lh stub32/dist/neqsim.dll
+
       - name: Create staging folder and copy artifacts
         shell: bash
         run: |
