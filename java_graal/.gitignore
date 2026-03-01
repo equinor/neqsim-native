@@ -5,10 +5,12 @@ target/
 *.class
 
 # Archives
-*.jar
 *.war
 *.zip
 *.tar.gz
+
+# Keep the local neqsim JAR dependency (needed for builds)
+!neqsim-*.jar
 
 # Logs / crash dumps
 *.log
