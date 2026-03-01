@@ -49,6 +49,24 @@
     </dependencies>
 
     <build>
+        <resources>
+            <!-- Filter version.properties so ${project.version} is replaced -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>version.properties</include>
+                </includes>
+            </resource>
+            <!-- Copy everything else unfiltered (avoids corrupting binary files) -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>version.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -56,6 +74,14 @@
                 <version>3.5.2</version>
                 <configuration>
                     <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <propertiesEncoding>UTF-8</propertiesEncoding>
                 </configuration>
             </plugin>
             <plugin>
@@ -121,7 +147,8 @@
         </profile>
 
         <!-- =============================================================
-             With-Python profiles (opt-in, -Ob for CI build speed)
+             Full profiles (-Ob for CI build speed).
+             Use with the 'with-python' profile to include GraalPy.
              Usage: mvn -Pnative-windows,with-python package
              ============================================================= -->
         <profile>

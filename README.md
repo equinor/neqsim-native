@@ -72,7 +72,7 @@ See the [example](example/) folder for sample C++ projects. Needed files:
 
 ## 32-bit Windows Support
 
-For 32-bit applications, a special package is available. It contains a thin 32-bit stub DLL that forwards calls over TCP to a 64-bit server process. The API is **identical** to the native 64-bit DLL — no code changes required.
+For 32-bit applications, a special package is available. It contains a thin 32-bit stub DLL that forwards calls over TCP to a 64-bit server process. The stub exports functions with the same names; however, `calcWaterDewPoint` and `calcWaterInGas` use output-pointer signatures in the stub (see [stub32/neqsim_stub.h](stub32/neqsim_stub.h)).
 
 See [stub32/README.md](stub32/README.md) for full documentation, usage examples, and build instructions.
 
