@@ -1,7 +1,6 @@
 # === Java / Maven ===
 *.class
 *.jar
-!java_graal/neqsim-*.jar
 *.war
 *.nar
 *.ear

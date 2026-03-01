@@ -1,12 +1,15 @@
 /**
  * neqsim_stub.h — Public API for the 32-bit NeqSim stub DLL.
  *
- * This header mirrors the function signatures produced by the GraalVM
- * native-image shared library (neqsim.dll / neqsim.h) so that existing
- * 32-bit C/C++ callers can link against this stub with no code changes.
+ * This header provides a 32-bit compatible API for calling NeqSim.
+ * Each call is forwarded over a local TCP socket to the 64-bit
+ * neqsim_server.exe which hosts the real NeqSim process models.
  *
- * Under the hood, each call is forwarded over a local TCP socket to the
- * 64-bit neqsim_server.exe which hosts the real NeqSim process models.
+ * NOTE: The stub API uses output pointers + quality flags (suitable for
+ * error reporting over TCP), whereas the 64-bit GraalVM native-image
+ * shared library returns results directly as doubles.  The two APIs
+ * are NOT interchangeable — see the examples/ directory for usage of
+ * each variant.
  */
 #ifndef NEQSIM_STUB_H
 #define NEQSIM_STUB_H

@@ -9,9 +9,6 @@ target/
 *.zip
 *.tar.gz
 
-# Keep the local neqsim JAR dependency (needed for builds)
-!neqsim-*.jar
-
 # Logs / crash dumps
 *.log
 hs_err_pid*

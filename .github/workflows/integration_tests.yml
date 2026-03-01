@@ -1,0 +1,37 @@
+name: Run Integration Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  integration_tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    permissions:
+      contents: read
+      packages: read
+
+    env:
+      # Used by java_graal/settings.xml to access GitHub Packages, if needed
+      GITHUB_USERNAME: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Run integration-tagged tests
+        working-directory: java_graal
+        run: ./mvnw -B test --file pom.xml -ntp -Dsurefire.excludedGroups=

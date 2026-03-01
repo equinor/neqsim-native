@@ -125,8 +125,15 @@ public class WaterDewPoint {
      * @param args Command line arguments (not used)
      */
     public static void main(String[] args) {
-        // Example usage
-        System.out.println("Calculated water dew point temperature: ");
-        System.out.println("Calculated water content in gas: ");
+        double pressure = 70.0;   // bar
+        double ppmWater = 22.0;   // ppm
+
+        double dewPoint = calcWaterDewPoint(pressure, ppmWater);
+        System.out.printf("Water dew point at %.1f bar, %.0f ppm: %.4f °C%n",
+                pressure, ppmWater, dewPoint);
+
+        double waterContent = calcWaterInGas(pressure, dewPoint);
+        System.out.printf("Water in gas at %.1f bar, %.4f °C: %.4f ppm%n",
+                pressure, dewPoint, waterContent);
     }
 }

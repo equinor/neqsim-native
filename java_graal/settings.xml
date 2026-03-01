@@ -13,7 +13,7 @@
                 <repository>
                     <id>github</id>
                     <name>GitHub Equinor Apache Maven Packages</name>
-                    <url>https://maven.pkg.github.com/equinor </url>
+                    <url>https://maven.pkg.github.com/equinor</url>
                 </repository>
             </repositories>
         </profile>
