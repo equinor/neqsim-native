@@ -124,7 +124,7 @@ jobs:
           Compress-Archive -Path "$stagingDir/*" -DestinationPath $zipFile -Force
 
       - name: Upload zipped artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: compiled-files-${{ steps.arch.outputs.arch_label }}
           path: java_graal/${{ steps.arch.outputs.zip_name }}
@@ -235,7 +235,7 @@ jobs:
           Compress-Archive -Path "$staging\*" -DestinationPath "neqsim-windows-x86-python.zip" -Force
 
       - name: Upload 32-bit artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: compiled-files-windows-x86-python
           path: neqsim-windows-x86-python.zip
@@ -370,7 +370,7 @@ jobs:
           Compress-Archive -Path "$stagingDir/*" -DestinationPath $zipFile -Force
 
       - name: Upload zipped artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: compiled-files-${{ steps.arch.outputs.arch_label }}
           path: java_graal/${{ steps.arch.outputs.zip_name }}
@@ -446,7 +446,7 @@ jobs:
           Compress-Archive -Path "$staging\*" -DestinationPath "neqsim-windows-x86.zip" -Force
 
       - name: Upload 32-bit artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: compiled-files-windows-x86
           path: neqsim-windows-x86.zip
