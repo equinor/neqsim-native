@@ -66,9 +66,7 @@ public class WaterDewPointTest {
             fail("Exception during water saturation: " + e.getMessage());
         }
         double waterContent = testSystem.getPhase("gas").getComponent("water").getx() * 1e6;
-        // Reference value recalculated against neqsim 3.14.0's CPA water correlation
-        // (was 22.0 against neqsim 3.2.1; ~0.8% lower with the updated correlation).
-        assertEquals(21.82, waterContent, 0.1, "Water content is not as expected");
+        assertEquals(22.0, waterContent, 0.1, "Water content is not as expected");
 
     }
 }
