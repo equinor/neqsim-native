@@ -11,12 +11,12 @@
     <packaging>jar</packaging>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <graalvm.svm.version>25.0.1</graalvm.svm.version>
-        <graalvm.polyglot.version>25.0.1</graalvm.polyglot.version>
-        <graalvm.buildtools.version>0.11.3</graalvm.buildtools.version>
+        <graalvm.svm.version>25.0.3</graalvm.svm.version>
+        <graalvm.polyglot.version>25.0.3</graalvm.polyglot.version>
+        <graalvm.buildtools.version>1.1.3</graalvm.buildtools.version>
         <!-- Default: skip long-running simulation tests. Override with -Djunit.jupiter.tags.exclude= -->
         <surefire.excludedGroups>integration</surefire.excludedGroups>
     </properties>
@@ -25,12 +25,12 @@
         <dependency>
             <groupId>com.equinor.neqsim</groupId>
             <artifactId>neqsim</artifactId>
-            <version>3.2.1</version>
+            <version>3.14.0</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.11.0</version>
+            <version>6.1.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -71,7 +71,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.2</version>
+                <version>3.5.6</version>
                 <configuration>
                     <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                 </configuration>
@@ -87,7 +87,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.1</version>
+                <version>3.15.0</version>
                 <configuration>
                     <fork>true</fork>
                 </configuration>
@@ -108,7 +108,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.3</version>
                 <executions>
                     <execution>
                         <id>enforce-versions</id>
@@ -120,8 +120,8 @@
                                     <message>Maven 3.9+ is required.</message>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
-                                    <version>[21,)</version>
-                                    <message>Java 21+ is required.</message>
+                                    <version>[25,)</version>
+                                    <message>Java 25+ is required.</message>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
@@ -168,6 +168,9 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
+                                    <metadataRepository>
+                                        <enabled>false</enabled>
+                                    </metadataRepository>
                                     <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
@@ -201,6 +204,9 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
+                                    <metadataRepository>
+                                        <enabled>false</enabled>
+                                    </metadataRepository>
                                     <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
@@ -234,6 +240,9 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
+                                    <metadataRepository>
+                                        <enabled>false</enabled>
+                                    </metadataRepository>
                                     <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
@@ -269,6 +278,9 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
+                                    <metadataRepository>
+                                        <enabled>false</enabled>
+                                    </metadataRepository>
                                     <mainClass>neqsim.server.NeqSimPipeServer</mainClass>
                                     <sharedLibrary>false</sharedLibrary>
                                     <imageName>neqsim_server</imageName>
@@ -307,6 +319,9 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
+                                    <metadataRepository>
+                                        <enabled>false</enabled>
+                                    </metadataRepository>
                                     <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
@@ -345,6 +360,9 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
+                                    <metadataRepository>
+                                        <enabled>false</enabled>
+                                    </metadataRepository>
                                     <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
@@ -382,6 +400,9 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
+                                    <metadataRepository>
+                                        <enabled>false</enabled>
+                                    </metadataRepository>
                                     <mainClass>neqsim.util.WaterDewPoint</mainClass>
                                     <sharedLibrary>true</sharedLibrary>
                                     <imageName>neqsim</imageName>
@@ -419,6 +440,9 @@
                                     <agent>
                                         <enabled>false</enabled>
                                     </agent>
+                                    <metadataRepository>
+                                        <enabled>false</enabled>
+                                    </metadataRepository>
                                     <mainClass>neqsim.server.NeqSimPipeServer</mainClass>
                                     <sharedLibrary>false</sharedLibrary>
                                     <imageName>neqsim_server</imageName>

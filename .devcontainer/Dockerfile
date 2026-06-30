@@ -1,6 +1,6 @@
 # Lightweight base image for dev containers.
 # GraalVM 25 (with native-image) is installed by the devcontainer feature in devcontainer.json.
-FROM mcr.microsoft.com/devcontainers/base:bullseye
+FROM mcr.microsoft.com/devcontainers/base:bookworm
 
 # Packages required by GraalVM native-image (zlib) and for compiling C/C++ examples (build-essential).
 RUN apt-get update && \
@@ -11,3 +11,15 @@ RUN apt-get update && \
         curl \
         git \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Configure swap so native-image can use virtual memory beyond physical RAM.
+# Codespaces 4-core machines have 16 GB RAM; native-image may need more during
+# the analysis phase.  A 4 GB swapfile provides headroom without disk pressure.
+RUN sudo fallocate -l 4G /swapfile && \
+    sudo chmod 600 /swapfile && \
+    sudo mkswap /swapfile
+# Swap is activated at container start via postCreateCommand (swapon requires
+# running as privileged, which isn't available at build time).
+
+# Set default user to vscode
+USER vscode

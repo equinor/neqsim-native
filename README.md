@@ -168,7 +168,7 @@ This repository includes automated CI/CD workflows via GitHub Actions:
 | **Verify Build** | Runs unit tests (Temurin JDK) on Windows + Linux, builds the 32-bit stub DLL | Push / PR to `main` |
 | **Integration Tests** | Runs all tests including `@Tag("integration")` Python model tests | Manual (`workflow_dispatch`) |
 
-Both workflows use **GraalVM 25.0.1** with the `native-image` component. The Maven build handles everything — there is no need to invoke `native-image` manually.
+Both workflows use **GraalVM 25.0.3** with the `native-image` component. The Maven build handles everything — there is no need to invoke `native-image` manually.
 
 ## Creating a Release
 
